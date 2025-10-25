@@ -1,18 +1,43 @@
-# TRELLO_BOARD_SETUP_V04
+# TRELLO_BOARD_SETUP_V05
 
-This document defines the Trello board structure and task breakdown for **The 404 Server Manager** project.
+## Trello Board Structure Overview
 
-The board contains two lists:
-- **The404-API To Do's** → backend tasks for The404-API repository
-- **The404-Web To Do's** → frontend tasks for The404-Web repository
+The Trello workspace for **The 404 Server Manager** project now follows a **six-board setup** designed to clearly track the lifecycle of every task across both backend and frontend repositories.
 
-Each card is a granular, actionable task that can be worked on independently and committed incrementally.
+### 🧩 Board Structure
 
----
+| Board Name                 | Purpose                                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The404-API To Do's**     | Contains all backend tasks that have not yet been started. Each card represents a distinct, actionable task for the **The404-API** repository.     |
+| **The404-API In Progress** | Holds backend tasks that are currently being worked on. When a developer starts a task from the To Do list, they move the corresponding card here. |
+| **The404-API Completed**   | Stores all finished backend tasks. Once a task in the In Progress list is verified and merged, the card is moved here.                             |
+
+| Board Name                 | Purpose                                                                                                                                         |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| **The404-Web To Do's**     | Contains all frontend tasks that have not yet been started. Each card represents a distinct, actionable task for the **The404-Web** repository. |
+| **The404-Web In Progress** | Holds frontend tasks that are currently being developed. Developers move cards here when work begins.                                           |
+| **The404-Web Completed**   | Contains all completed frontend tasks that have passed verification and testing. Cards are moved here when the feature or fix is finalized.     |
+
+### 🔁 Workflow Summary
+
+Each Trello board operates on a simple, linear task flow:
+
+1. **To Do’s → In Progress → Completed**
+2. Cards are **moved**, not copied — this ensures each task exists only once in the workflow.
+3. Archiving is **not** used for tracking progress. Instead, it’s reserved for cleaning up cards only after a release cycle or milestone is fully closed.
+
+This structure provides a clear view of:
+
+- What’s planned (To Do’s)
+- What’s actively being built (In Progress)
+- What’s finished and verified (Completed)
+
+## It creates a unified visual pipeline for both repositories while maintaining separation between backend (API) and frontend (Web) development work.
 
 ## The404-API To Do's
 
 ### Card 1: Create NginxFiles Mongoose Schema
+
 - Create `src/models/nginxFile.ts`
 - Define interface `INginxFileDocument` with fields:
   - `serverName`: string
@@ -26,23 +51,27 @@ Each card is a granular, actionable task that can be worked on independently and
 - Export Mongoose model
 
 ### Card 2: Test NginxFile Model Creation
+
 - Write test to create sample NginxFile document
 - Verify relationships with Machine collection work correctly
 - Test validation for required fields
 
 ### Card 3: Create JWT Authentication Middleware
+
 - Create `src/middleware/auth.ts`
 - Implement `verifyToken` middleware function
 - Extract user ID from JWT and attach to `req.user`
 - Handle invalid/expired token errors
 
 ### Card 4: Create Nginx Router Setup
+
 - Create `src/routes/nginx.ts`
 - Register router under `/nginx` in `src/app.ts`
 - Apply JWT middleware to all nginx routes
 - Add basic error handling
 
 ### Card 5: Implement GET /nginx Endpoint
+
 - Create controller function in `src/routes/nginx.ts`
 - Fetch all NginxFiles from database
 - Populate both `appHostServerMachineId` and `nginxHostServerMachineId`
@@ -50,12 +79,14 @@ Each card is a granular, actionable task that can be worked on independently and
 - Add error handling for database failures
 
 ### Card 6: Implement POST /nginx/create-config-file Endpoint (Part 1: Validation)
+
 - Define request body interface
 - Validate required fields: `serverNames[]`, `appHostServerMachineId`, `nginxHostServerMachineId`, `portNumber`, `framework`, `storeDirectory`
 - Verify both machine IDs exist in database
 - Return 400 with clear error messages for invalid input
 
 ### Card 7: Implement POST /nginx/create-config-file Endpoint (Part 2: File Generation)
+
 - Call template selector utility
 - Generate nginx config content from template
 - Call filesystem writer utility
@@ -63,6 +94,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Return file path on success
 
 ### Card 8: Implement POST /nginx/create-config-file Endpoint (Part 3: Database Record)
+
 - Create new NginxFile document with:
   - Primary server name (first in array)
   - Additional server names
@@ -73,6 +105,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Return created document
 
 ### Card 9: Create Nginx Template Selector Utility
+
 - Create `src/utils/nginxTemplateSelector.ts`
 - Implement function `selectTemplate(framework, storeDirectory)`
 - Support frameworks: ExpressJS, Next.js, Python
@@ -80,6 +113,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Add tests for each framework
 
 ### Card 10: Create Nginx File Writer Utility
+
 - Create `src/utils/nginxFileWriter.ts`
 - Implement function `writeNginxConfig(filePath, content)`
 - Handle permission errors
@@ -88,6 +122,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Log all file operations
 
 ### Card 11: Create Nginx Config Templates
+
 - Create template files or strings for:
   - ExpressJS reverse proxy
   - Next.js static + API proxy
@@ -96,6 +131,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Store in `src/templates/nginx/` or as constants
 
 ### Card 12: Write Unit Tests for Nginx Routes
+
 - Create `src/tests/nginxRoutes.test.ts`
 - Mock database calls
 - Mock file system operations
@@ -103,6 +139,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Test POST /nginx/create-config-file validation
 
 ### Card 13: Update API Documentation
+
 - Update `docs/API_REFERENCE.md`
 - Add `/nginx` section with:
   - GET /nginx endpoint documentation
@@ -115,50 +152,59 @@ Each card is a granular, actionable task that can be worked on independently and
 ## The404-Web To Do's
 
 ### Card 14: Create Machine Slice
+
 - Create `src/store/features/machines/machineSlice.ts`
 - Define `MachineState` interface with `machinesArray` and `connectedMachine`
 - Create reducers: `setMachinesArray`, `connectMachine`, `disconnectMachine`
 - Export typed hooks if needed
 
 ### Card 15: Update Store Configuration
+
 - Add `machineSlice` to `rootReducer` in `src/store/index.ts`
 - Ensure machine state is NOT in persist whitelist
 - Test Redux DevTools shows new slice
 
 ### Card 16: Refactor User Slice
+
 - Remove from `userSlice.ts`: `machineName`, `urlFor404Api`, `localIpAddress`, `nginxStoragePathOptions`
 - Keep only authentication fields: `token`, `username`, `email`, `isAdmin`
 - Update type definitions
 
 ### Card 17: Update AppHeader to Use Machine Slice
+
 - Refactor `src/layout/AppHeader.tsx`
 - Use `useAppSelector` to get `connectedMachine` from machine slice
 - Display `machineName` and `urlFor404Api`
 - Handle null connectedMachine state
 
 ### Card 18: Update Machines Page to Use Machine Slice
+
 - Refactor `src/app/(dashboard)/servers/machines/page.tsx`
 - Use `setMachinesArray` to populate machines
 - Use `connectMachine` when user clicks "Connect Machine" button
 - Dispatch to machine slice instead of user slice
 
 ### Card 19: Add DNS Parent NavItem to Sidebar
+
 - Update `src/layout/AppSidebar.tsx`
 - Add new parent NavItem: "DNS" or "Manage DNS"
 - Use globe icon from `src/icons/`
 - Add subItems array (placeholder paths)
 
 ### Card 20: Add Nginx SubItem to DNS Menu
+
 - In `AppSidebar.tsx`, add subItem under DNS:
   - Name: "Nginx"
   - Path: `/dns/nginx`
 
 ### Card 21: Add Registrar SubItem to DNS Menu
+
 - In `AppSidebar.tsx`, add subItem under DNS:
   - Name: "Registrar" or "GoDaddy"
   - Path: `/dns/registrar`
 
 ### Card 22: Create DNS Nginx Page Layout
+
 - Create `src/app/(dashboard)/dns/nginx/page.tsx`
 - Set up basic page structure with two sections:
   - Top: Form container
@@ -166,24 +212,28 @@ Each card is a granular, actionable task that can be worked on independently and
 - Add page heading and breadcrumbs
 
 ### Card 23: Create Machine Dropdown Components
+
 - Create reusable dropdown component for selecting machines
 - Fetch machines from Redux store (`machinesArray`)
 - Display machine name and URL
 - Return selected machine object on change
 
 ### Card 24: Create Nginx Host Machine Dropdown
+
 - Add dropdown to form: "Nginx Host Machine"
 - Populate from `machinesArray`
 - Use machine dropdown component
 - Save selected machine to form state
 
 ### Card 25: Create App Host Machine Dropdown
+
 - Add dropdown to form: "App Host Machine"
 - Populate from `machinesArray`
 - Use machine dropdown component
 - Save selected machine to form state
 
 ### Card 26: Create Server Names Input with Dynamic Add
+
 - Add text input: "Primary Server Name"
 - Add "+ Add Additional Server Name" button
 - Allow multiple server name inputs
@@ -191,23 +241,27 @@ Each card is a granular, actionable task that can be worked on independently and
 - Validate format (domain/subdomain)
 
 ### Card 27: Create Port Number Input
+
 - Add number input: "Port Number"
 - Validate range (1-65535)
 - Show validation errors
 
 ### Card 28: Create Framework Radio Buttons
+
 - Add radio group: "App Technology"
 - Options: ExpressJS, Next.js, Python
 - Style with terminal theme
 - Store selected value in form state
 
 ### Card 29: Create Store Directory Radio Buttons
+
 - Add radio group: "Config Store Directory"
 - Populate options from selected Nginx host's `nginxStoragePathOptions`
 - Handle case when no Nginx host selected
 - Store selected value in form state
 
 ### Card 30: Create Form Submit Handler
+
 - Validate all required fields
 - Show loading state during submission
 - Call API to create nginx config
@@ -215,6 +269,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Handle errors: show error message
 
 ### Card 31: Create TableNginxFiles Component Structure
+
 - Create `src/components/tables/TableNginxFiles.tsx`
 - Set up table with columns:
   - Server Name
@@ -225,28 +280,33 @@ Each card is a granular, actionable task that can be worked on independently and
 - Use terminal-themed table styling
 
 ### Card 32: Implement Data Fetching for TableNginxFiles
+
 - Add `useEffect` to fetch nginx files on mount
 - Use `connectedMachine.urlFor404Api` for API base URL
 - Include JWT token from Redux
 - Handle loading and error states
 
 ### Card 33: Populate TableNginxFiles with Data
+
 - Map fetched nginx files to table rows
 - Display machine names (not IDs)
 - Format dates appropriately
 - Handle empty state (no configs)
 
 ### Card 34: Add Refresh Functionality to Table
+
 - Add refresh button above table
 - Re-fetch data on click
 - Show loading indicator during refresh
 
 ### Card 35: Create DNS Registrar Page Layout
+
 - Create `src/app/(dashboard)/dns/registrar/page.tsx`
 - Add placeholder heading: "DNS Registrar Management"
 - Add note: "Porkbun API integration coming soon"
 
 ### Card 36: Create Registrar Form (Placeholder)
+
 - Add form with fields:
   - Server name input
   - IP address input
@@ -255,6 +315,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Non-functional (no submit yet)
 
 ### Card 37: Create Registrar Table (Placeholder)
+
 - Add empty table structure with columns:
   - Domain
   - IP Address
@@ -263,12 +324,14 @@ Each card is a granular, actionable task that can be worked on independently and
 - Show "No records yet" message
 
 ### Card 38: Create Nginx API Helper - GET
+
 - Create `src/utils/api/nginx.ts`
 - Implement `getNginxFiles(token: string, apiBaseUrl: string)`
 - Return typed response
 - Handle network errors
 
 ### Card 39: Create Nginx API Helper - POST
+
 - In `src/utils/api/nginx.ts`
 - Implement `createNginxConfig(payload: CreateNginxConfigPayload, token: string, apiBaseUrl: string)`
 - Define `CreateNginxConfigPayload` interface
@@ -276,6 +339,7 @@ Each card is a granular, actionable task that can be worked on independently and
 - Handle network errors
 
 ### Card 40: Manual Integration Test - Create Config
+
 - Navigate to `/dns/nginx`
 - Fill out form with test data
 - Submit form
@@ -283,30 +347,35 @@ Each card is a granular, actionable task that can be worked on independently and
 - Verify new row appears in table
 
 ### Card 41: Manual Integration Test - File Verification
+
 - SSH into maestro03 (Nginx host machine)
 - Check `/etc/nginx/sites-available/` for new config file
 - Verify file contents match form inputs
 - Verify syntax: `sudo nginx -t`
 
 ### Card 42: UI Responsiveness QA
+
 - Test form on mobile screen sizes
 - Verify dropdowns work on touch devices
 - Check table horizontal scroll
 - Test sidebar collapse/expand
 
 ### Card 43: Theme Compliance Check
+
 - Verify all new components use terminal color palette
 - Check brand orange for primary actions
 - Verify dark mode works correctly
 - Test high contrast ratios
 
 ### Card 44: Update README with DNS Routes
+
 - Add `/dns/nginx` route documentation
 - Add `/dns/registrar` route documentation
 - Update navigation menu structure
 - Add machine slice documentation
 
 ### Card 45: Update CLAUDE_THE404_WEB.md
+
 - Add DNS page section
 - Document machine slice pattern
 - Add API helper documentation
@@ -317,12 +386,14 @@ Each card is a granular, actionable task that can be worked on independently and
 ## Summary
 
 **Total Cards:** 45
+
 - **The404-API:** 13 cards
 - **The404-Web:** 32 cards
 
 **Estimated Effort per Card:** 1-3 hours of focused work
 
 **Key Dependencies:**
+
 - Cards 1-3 should be completed before Cards 4-8 (API foundation before routes)
 - Cards 14-18 should be completed before Cards 22-45 (Redux refactor before new pages)
 - API Cards 1-13 should be completed before Web Cards 38-41 (backend before frontend integration)

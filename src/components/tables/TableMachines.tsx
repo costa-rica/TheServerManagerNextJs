@@ -12,7 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { Machine } from "@/types/machine";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { connectMachine } from "@/store/features/user/userSlice";
+import { connectMachine } from "@/store/features/machines/machineSlice";
 
 interface TableMachinesProps {
 	data: Machine[];
@@ -36,19 +36,14 @@ export default function TableMachines({
 	handleDeleteMachine,
 }: TableMachinesProps) {
 	const dispatch = useAppDispatch();
-	const connectedMachineName = useAppSelector((s) => s.user.machineName);
+	const connectedMachineName = useAppSelector(
+		(s) => s.machine.connectedMachine?.machineName || null
+	);
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
 
 	const handleConnect = (machine: Machine) => {
-		dispatch(
-			connectMachine({
-				machineName: machine.machineName,
-				urlFor404Api: machine.urlFor404Api,
-				localIpAddress: machine.localIpAddress,
-				nginxStoragePathOptions: machine.nginxStoragePathOptions,
-			})
-		);
+		dispatch(connectMachine(machine));
 	};
 
 	const columns = useMemo<ColumnDef<Machine>[]>(

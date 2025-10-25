@@ -1,6 +1,7 @@
 // src/store/index.ts
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import user from "./features/user/userSlice";
+import machine from "./features/machines/machineSlice";
 import {
 	persistReducer,
 	persistStore,
@@ -13,7 +14,7 @@ import {
 } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // uses window.localStorage
 
-const rootReducer = combineReducers({ user });
+const rootReducer = combineReducers({ user, machine });
 
 const persistConfig = {
 	key: "root",

@@ -33,7 +33,9 @@ export default function AppsPage() {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const token = useAppSelector((state) => state.user.token);
-	const urlFor404Api = useAppSelector((state) => state.user.urlFor404Api);
+	const urlFor404Api = useAppSelector(
+		(state) => state.machine.connectedMachine?.urlFor404Api || null
+	);
 
 	const showInfoModal = (
 		title: string,

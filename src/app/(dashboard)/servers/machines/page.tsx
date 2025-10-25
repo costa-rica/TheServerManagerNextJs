@@ -7,7 +7,8 @@ import { ModalAddMachine } from "@/components/ui/modal/ModalAddMachine";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 import { Machine } from "@/types/machine";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { setMachinesArray } from "@/store/features/machines/machineSlice";
 
 export default function MachinesPage() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
@@ -29,6 +30,7 @@ export default function MachinesPage() {
 	const [machines, setMachines] = useState<Machine[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const dispatch = useAppDispatch();
 	const token = useAppSelector((state) => state.user.token);
 
 	const showInfoModal = (
@@ -49,6 +51,7 @@ export default function MachinesPage() {
 			if (process.env.NEXT_PUBLIC_MODE === "mock_data") {
 				// Use mock data
 				setMachines(mockMachinesData.existingMachines);
+				dispatch(setMachinesArray(mockMachinesData.existingMachines));
 				setLoading(false);
 			} else {
 				// Fetch from API
@@ -73,6 +76,7 @@ export default function MachinesPage() {
 
 				if (data.result && Array.isArray(data.existingMachines)) {
 					setMachines(data.existingMachines);
+					dispatch(setMachinesArray(data.existingMachines));
 				} else {
 					throw new Error("Invalid response format from API");
 				}
@@ -83,7 +87,7 @@ export default function MachinesPage() {
 			setError(err instanceof Error ? err.message : "Failed to fetch machines");
 			setLoading(false);
 		}
-	}, [token]);
+	}, [token, dispatch]);
 
 	useEffect(() => {
 		fetchMachines();

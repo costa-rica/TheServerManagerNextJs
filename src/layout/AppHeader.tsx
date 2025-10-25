@@ -6,9 +6,11 @@ import React, { useEffect, useRef } from "react";
 
 const AppHeader: React.FC = () => {
 	const { isMobileOpen, toggleMobileSidebar } = useSidebar();
-	const { machineName, urlFor404Api, localIpAddress } = useAppSelector(
-		(s) => s.user
-	);
+	const connectedMachine = useAppSelector((s) => s.machine.connectedMachine);
+
+	const machineName = connectedMachine?.machineName || null;
+	const urlFor404Api = connectedMachine?.urlFor404Api || null;
+	const localIpAddress = connectedMachine?.localIpAddress || null;
 
 	const handleToggle = () => {
 		toggleMobileSidebar();

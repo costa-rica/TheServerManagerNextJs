@@ -7,11 +7,6 @@ export interface UserState {
 	username: string | null;
 	email: string | null;
 	isAdmin: boolean;
-	// Connected machine info
-	machineName: string | null;
-	urlFor404Api: string | null;
-	localIpAddress: string | null;
-	nginxStoragePathOptions: string[];
 }
 
 const initialState: UserState = {
@@ -19,11 +14,6 @@ const initialState: UserState = {
 	username: null,
 	email: null,
 	isAdmin: false,
-	// Connected machine info
-	machineName: null,
-	urlFor404Api: null,
-	localIpAddress: null,
-	nginxStoragePathOptions: [],
 };
 
 export const userSlice = createSlice({
@@ -43,28 +33,6 @@ export const userSlice = createSlice({
 			state.isAdmin = action.payload.user.isAdmin || false;
 		},
 
-		connectMachine: (
-			state,
-			action: PayloadAction<{
-				machineName: string;
-				urlFor404Api: string;
-				localIpAddress: string;
-				nginxStoragePathOptions: string[];
-			}>
-		) => {
-			state.machineName = action.payload.machineName;
-			state.urlFor404Api = action.payload.urlFor404Api;
-			state.localIpAddress = action.payload.localIpAddress;
-			state.nginxStoragePathOptions = action.payload.nginxStoragePathOptions;
-		},
-
-		disconnectMachine: (state) => {
-			state.machineName = null;
-			state.urlFor404Api = null;
-			state.localIpAddress = null;
-			state.nginxStoragePathOptions = [];
-		},
-
 		logoutUser: (state) => {
 			state.token = null;
 			state.username = null;
@@ -76,21 +44,11 @@ export const userSlice = createSlice({
 			state.username = null;
 			state.email = null;
 			state.isAdmin = false;
-			state.machineName = null;
-			state.urlFor404Api = null;
-			state.localIpAddress = null;
-			state.nginxStoragePathOptions = [];
 			console.log("-----> Finished Super Logout !!!");
 		},
 	},
 });
 
-export const {
-	loginUser,
-	logoutUser,
-	logoutUserFully,
-	connectMachine,
-	disconnectMachine,
-} = userSlice.actions;
+export const { loginUser, logoutUser, logoutUserFully } = userSlice.actions;
 
 export default userSlice.reducer;

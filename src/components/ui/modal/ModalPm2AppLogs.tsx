@@ -19,7 +19,9 @@ export const ModalPm2AppLogs: React.FC<ModalPm2AppLogsProps> = ({
 	const [error, setError] = useState<string | null>(null);
 
 	const token = useAppSelector((state) => state.user.token);
-	const urlFor404Api = useAppSelector((state) => state.user.urlFor404Api);
+	const urlFor404Api = useAppSelector(
+		(state) => state.machine.connectedMachine?.urlFor404Api || null
+	);
 
 	// Fetch logs function
 	const fetchLogs = async (type: LogType) => {
