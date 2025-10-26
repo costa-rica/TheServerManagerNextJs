@@ -9,7 +9,7 @@ import {
 	ChevronDownIcon,
 	CloseIcon,
 	DatabaseIcon,
-	HorizontaLDots,
+	GlobeIcon,
 	LogoutIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
@@ -33,23 +33,20 @@ const navItems: NavItem[] = [
 		],
 	},
 	{
+		icon: <GlobeIcon />,
+		name: "DNS",
+		subItems: [
+			{ name: "Nginx", path: "/dns/nginx", pro: false },
+			{ name: "Registrar", path: "/dns/registrar", pro: false },
+		],
+	},
+	{
 		icon: <LogoutIcon />,
 		name: "Logout",
 		onClick: () => {}, // Placeholder - actual handler assigned in renderMenuItems
 	},
 ];
 
-const othersItems: NavItem[] = [
-	{
-		icon: <DatabaseIcon />,
-		name: "Database",
-		subItems: [
-			{ name: "Backup", path: "/admin-database/backup", pro: false },
-			{ name: "Upload", path: "/admin-database/upload", pro: false },
-			{ name: "Delete", path: "/admin-database/delete", pro: false },
-		],
-	},
-];
 
 const AppSidebar: React.FC = () => {
 	const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } =
@@ -219,21 +216,18 @@ const AppSidebar: React.FC = () => {
 	useEffect(() => {
 		// Check if the current path matches any submenu item
 		let submenuMatched = false;
-		["main", "others"].forEach((menuType) => {
-			const items = menuType === "main" ? navItems : othersItems;
-			items.forEach((nav, index) => {
-				if (nav.subItems) {
-					nav.subItems.forEach((subItem) => {
-						if (isActive(subItem.path)) {
-							setOpenSubmenu({
-								type: menuType as "main" | "others",
-								index,
-							});
-							submenuMatched = true;
-						}
-					});
-				}
-			});
+		navItems.forEach((nav, index) => {
+			if (nav.subItems) {
+				nav.subItems.forEach((subItem) => {
+					if (isActive(subItem.path)) {
+						setOpenSubmenu({
+							type: "main",
+							index,
+						});
+						submenuMatched = true;
+					}
+				});
+			}
 		});
 
 		// If no submenu item matches, close the open submenu
@@ -319,29 +313,7 @@ const AppSidebar: React.FC = () => {
 				)}
 
 				<nav className="mb-6">
-					<div className="flex flex-col gap-4">
-						<div>
-							<h2
-								className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-									!isExpanded ? "lg:justify-center" : "justify-start"
-								}`}
-							>
-								{isExpanded || isMobileOpen ? "Main" : <HorizontaLDots />}
-							</h2>
-							{renderMenuItems(navItems, "main")}
-						</div>
-
-						<div className="">
-							<h2
-								className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-									!isExpanded ? "lg:justify-center" : "justify-start"
-								}`}
-							>
-								{isExpanded || isMobileOpen ? "Admin" : <HorizontaLDots />}
-							</h2>
-							{renderMenuItems(othersItems, "others")}
-						</div>
-					</div>
+					{renderMenuItems(navItems, "main")}
 				</nav>
 				{isExpanded || isMobileOpen ? <SidebarWidget /> : null}
 			</div>

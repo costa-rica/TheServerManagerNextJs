@@ -78,22 +78,75 @@ This structure provides a clear view of:
 - Return array of nginx config objects
 - Add error handling for database failures
 
-### Card 6: Implement POST /nginx/create-config-file Endpoint (Part 1: Validation)
+## 🧩 Card 6: Implement POST /nginx/create-config-file (Part 1: Validation)
 
-- Define request body interface
-- Validate required fields: `serverNames[]`, `appHostServerMachineId`, `nginxHostServerMachineId`, `portNumber`, `framework`, `storeDirectory`
-- Verify both machine IDs exist in database
-- Return 400 with clear error messages for invalid input
+### Description
 
-### Card 7: Implement POST /nginx/create-config-file Endpoint (Part 2: File Generation)
+This endpoint will make use of external template files stored in the directory defined by the `.env` variable `PATH_PROJECT_RESOURCES`. In that directory, there will be a subdirectory called `createTemplateFile/`, which contains the template `.txt` files used for nginx configuration generation.
 
-- Call template selector utility
-- Generate nginx config content from template
-- Call filesystem writer utility
-- Handle file write errors
-- Return file path on success
+The validation step should ensure that the request body includes all required fields and that they are valid before passing data to the file creation module.
 
-### Card 8: Implement POST /nginx/create-config-file Endpoint (Part 3: Database Record)
+### Requirements
+
+- Validate the following request body elements:
+  - `templateFileName` (string) – must correspond to an existing `.txt` file in `PATH_PROJECT_RESOURCES/createTemplateFile/`
+  - `serverNamesArray` (array of strings)
+  - `appHostServerMachineId` (valid ObjectId reference to the Machines collection)
+  - `portNumber` (number)
+  - `saveDestination` (string) – must be either `sites-available` or `conf.d`
+- Verify that the specified template file exists before continuing.
+- Return `400` with a clear error message if any validation fails.
+- Prepare the validated request body for processing by the nginx module.
+
+---
+
+## 🧰 Card 7: Implement POST /nginx/create-config-file (Part 2: Template Processing Module)
+
+### Description
+
+Create a new module called `src/modules/nginx.ts` that will contain logic for handling nginx configuration file creation using template files stored externally. This module will export at least one main function to be used by the `POST /nginx/create-config-file` endpoint after validation is complete.
+
+### Requirements
+
+- Read the template file located in `${PATH_PROJECT_RESOURCES}/createTemplateFile/` as specified by the `templateFileName` request body parameter.
+- Replace placeholder tokens in the template with actual values:
+  - `<ReplaceMe: server name>` → first entry of `serverNamesArray`
+  - `<ReplaceMe: local ip>` → value from the `localIpAddress` field of the Machine document found using `appHostServerMachineId`
+  - `<ReplaceMe: port number>` → `portNumber` from the request body
+- Generate the new nginx configuration file in the appropriate directory (`/etc/nginx/sites-available` or `/etc/nginx/conf.d`).
+- Save metadata to the `NginxFiles` collection after successful creation.
+
+---
+
+## 🧾 Card 8: Add File and Directory Validation Utility
+
+### Description
+
+Before attempting to read or write nginx configuration files, verify that the required directories and files exist within the project’s resource path. Implement this logic as a separate helper to keep route and module code clean.
+
+### Requirements
+
+- Add a utility function called `verifyTemplateFileExists()` in `src/utils/fileValidation.ts` (or similar).
+- Confirm that `PATH_PROJECT_RESOURCES/createTemplateFile/` exists.
+- Confirm that the requested `templateFileName` exists before proceeding.
+- Return meaningful error responses if missing or inaccessible.
+
+---
+
+## 🧪 Card 9: Integration Test for Template File Processing
+
+### Description
+
+Create integration tests to verify that the new POST `/nginx/create-config-file` endpoint correctly validates, processes, and writes nginx configuration files using the provided templates.
+
+### Requirements
+
+- Use Jest and Supertest to simulate HTTP POST requests.
+- Mock filesystem interactions where appropriate.
+- Confirm that placeholder replacement is performed correctly.
+- Ensure that MongoDB document creation occurs as expected in the `NginxFiles` collection.
+
+### Card 10: Implement POST /nginx/create-config-file Endpoint (Part 3: Database Record)
 
 - Create new NginxFile document with:
   - Primary server name (first in array)
@@ -103,32 +156,6 @@ This structure provides a clear view of:
   - Framework and store directory
 - Save to database
 - Return created document
-
-### Card 9: Create Nginx Template Selector Utility
-
-- Create `src/utils/nginxTemplateSelector.ts`
-- Implement function `selectTemplate(framework, storeDirectory)`
-- Support frameworks: ExpressJS, Next.js, Python
-- Return appropriate template string or file path
-- Add tests for each framework
-
-### Card 10: Create Nginx File Writer Utility
-
-- Create `src/utils/nginxFileWriter.ts`
-- Implement function `writeNginxConfig(filePath, content)`
-- Handle permission errors
-- Create parent directories if needed
-- Return absolute file path on success
-- Log all file operations
-
-### Card 11: Create Nginx Config Templates
-
-- Create template files or strings for:
-  - ExpressJS reverse proxy
-  - Next.js static + API proxy
-  - Python (Flask/Django) reverse proxy
-- Include placeholders for: server names, port, root directory
-- Store in `src/templates/nginx/` or as constants
 
 ### Card 12: Write Unit Tests for Nginx Routes
 
