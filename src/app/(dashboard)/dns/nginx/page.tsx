@@ -113,6 +113,10 @@ export default function NginxPage() {
 		setPortError(validatePort(value));
 	};
 
+	const handleFrameworkChange = (value: string) => {
+		setFormState((prev) => ({ ...prev, framework: value }));
+	};
+
 	const showInfoModal = (
 		title: string,
 		message: string,
@@ -375,6 +379,36 @@ export default function NginxPage() {
 								{portError}
 							</p>
 						)}
+					</div>
+
+					{/* App Technology */}
+					<div>
+						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+							App Technology
+						</label>
+						<div className="flex flex-col gap-3">
+							{[
+								{ label: "ExpressJS", value: "expressJs" },
+								{ label: "Next.js / Python", value: "nextJsPython" }
+							].map((framework) => (
+								<label
+									key={framework.value}
+									className="flex items-center gap-3 cursor-pointer group"
+								>
+									<input
+										type="radio"
+										name="framework"
+										value={framework.value}
+										checked={formState.framework === framework.value}
+										onChange={(e) => handleFrameworkChange(e.target.value)}
+										className="h-4 w-4 border-gray-300 text-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 cursor-pointer"
+									/>
+									<span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors">
+										{framework.label}
+									</span>
+								</label>
+							))}
+						</div>
 					</div>
 
 					{/* Placeholder for additional form fields */}

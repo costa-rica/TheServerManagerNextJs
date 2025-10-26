@@ -1016,13 +1016,18 @@ Create a new nginx configuration file from a template and save it to the specifi
 
 ```json
 {
-	"templateFileName": "express-api.conf",
+	"templateFileName": "expressJs",
 	"serverNamesArray": ["api.example.com", "www.api.example.com"],
 	"appHostServerMachineId": "507f1f77bcf86cd799439012",
 	"portNumber": 3000,
 	"saveDestination": "sites-available"
 }
 ```
+
+**Template Types:**
+
+- `"expressJs"` - Uses `expressJsSitesAvailable.txt` template
+- `"nextJsPython"` - Uses `nextJsPythonSitesAvailable.txt` template
 
 **Request Example:**
 
@@ -1031,7 +1036,7 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
 --data-raw '{
-  "templateFileName": "express-api.conf",
+  "templateFileName": "expressJs",
   "serverNamesArray": ["api.example.com", "www.api.example.com"],
   "appHostServerMachineId": "507f1f77bcf86cd799439012",
   "portNumber": 3000,
@@ -1062,6 +1067,7 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 
 **Notes:**
 
+- `templateFileName` must be either `"expressJs"` or `"nextJsPython"`
 - Template files must exist in the templates directory
 - `saveDestination` must be either `'sites-available'` or `'conf.d'`
 - The machine specified by `appHostServerMachineId` must exist and have a `localIpAddress` field
@@ -1082,6 +1088,14 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 ```json
 {
 	"error": "templateFileName must be a non-empty string"
+}
+```
+
+**400 Bad Request - Invalid Template Type:**
+
+```json
+{
+	"error": "Invalid templateFileName. Must be one of: expressJs, nextJsPython"
 }
 ```
 
@@ -1137,7 +1151,7 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 
 ```json
 {
-	"error": "Template file 'express-api.conf' not found"
+	"error": "Template file 'expressJsSitesAvailable.txt' not found"
 }
 ```
 
