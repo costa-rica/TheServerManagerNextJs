@@ -1,7 +1,35 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import MachineSelect from "@/components/form/MachineSelect";
+import { Machine } from "@/store/features/machines/machineSlice";
+
+interface NginxFormState {
+	nginxHostMachine: Machine | null;
+	appHostMachine: Machine | null;
+	serverNames: string[];
+	port: string;
+	framework: string;
+	storeDirectory: string;
+}
 
 export default function NginxPage() {
+	const [formState, setFormState] = useState<NginxFormState>({
+		nginxHostMachine: null,
+		appHostMachine: null,
+		serverNames: [],
+		port: "",
+		framework: "",
+		storeDirectory: "",
+	});
+
+	const handleNginxHostChange = (machine: Machine | null) => {
+		setFormState((prev) => ({ ...prev, nginxHostMachine: machine }));
+	};
+
+	const handleAppHostChange = (machine: Machine | null) => {
+		setFormState((prev) => ({ ...prev, appHostMachine: machine }));
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
@@ -21,9 +49,30 @@ export default function NginxPage() {
 				<h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
 					Create New Configuration
 				</h2>
-				<div className="text-gray-500 dark:text-gray-400">
-					Form will be implemented here
-				</div>
+				<form className="space-y-6">
+					{/* Nginx Host Machine */}
+					<div>
+						<MachineSelect
+							label="Nginx Host Machine"
+							placeholder="Select the machine hosting Nginx"
+							onChange={handleNginxHostChange}
+						/>
+					</div>
+
+					{/* App Host Machine */}
+					<div>
+						<MachineSelect
+							label="App Host Machine"
+							placeholder="Select the machine hosting the application"
+							onChange={handleAppHostChange}
+						/>
+					</div>
+
+					{/* Placeholder for additional form fields */}
+					<div className="text-gray-500 dark:text-gray-400 text-sm italic">
+						Additional form fields will be added in subsequent cards...
+					</div>
+				</form>
 			</div>
 
 			{/* Table Container */}
