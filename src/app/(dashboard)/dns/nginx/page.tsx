@@ -27,6 +27,7 @@ export default function NginxPage() {
 	const [serverNameErrors, setServerNameErrors] = useState<string[]>([""]);
 	const [portError, setPortError] = useState<string>("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [formResetKey, setFormResetKey] = useState(0);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
 	const [infoModalData, setInfoModalData] = useState<{
@@ -214,6 +215,7 @@ export default function NginxPage() {
 				});
 				setServerNameErrors([""]);
 				setPortError("");
+				setFormResetKey((prev) => prev + 1); // Force MachineSelect to reset
 
 				showInfoModal(
 					"Configuration Created",
@@ -424,6 +426,7 @@ export default function NginxPage() {
 					{/* App Host Machine */}
 					<div>
 						<MachineSelect
+							key={formResetKey}
 							label="App Host Machine"
 							placeholder="Select the machine hosting the application"
 							onChange={handleAppHostChange}
