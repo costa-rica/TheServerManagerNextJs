@@ -74,6 +74,32 @@ export default function TableNginxFiles({
 }: TableNginxFilesProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
+	const [expandedStoreDir, setExpandedStoreDir] = useState<Set<string>>(new Set());
+	const [expandedNginxHost, setExpandedNginxHost] = useState<Set<string>>(new Set());
+
+	const toggleStoreDir = (id: string) => {
+		setExpandedStoreDir((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(id)) {
+				newSet.delete(id);
+			} else {
+				newSet.add(id);
+			}
+			return newSet;
+		});
+	};
+
+	const toggleNginxHost = (id: string) => {
+		setExpandedNginxHost((prev) => {
+			const newSet = new Set(prev);
+			if (newSet.has(id)) {
+				newSet.delete(id);
+			} else {
+				newSet.add(id);
+			}
+			return newSet;
+		});
+	};
 
 	const columns = useMemo<ColumnDef<NginxFile>[]>(
 		() => [
@@ -84,6 +110,9 @@ export default function TableNginxFiles({
 				enableColumnFilter: false,
 				cell: (info) => {
 					const config = info.row.original;
+					const isStoreDirExpanded = expandedStoreDir.has(config._id);
+					const isNginxHostExpanded = expandedNginxHost.has(config._id);
+
 					return (
 						<div className="space-y-2">
 							{/* Server Name */}
@@ -95,12 +124,6 @@ export default function TableNginxFiles({
 							<div className="space-y-1">
 								<div className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide">
 									App Host Details
-								</div>
-								<div className="text-sm text-gray-700 dark:text-gray-300">
-									<span className="font-medium">IP:</span>{" "}
-									<span className="font-mono">
-										{config.appHostServerMachineId.localIpAddress}
-									</span>
 								</div>
 								<div className="text-sm text-gray-700 dark:text-gray-300">
 									<span className="font-medium">Port:</span>{" "}
@@ -123,18 +146,72 @@ export default function TableNginxFiles({
 									</div>
 								)}
 
+								{/* Store Directory - Expandable */}
 								<div className="text-sm text-gray-700 dark:text-gray-300">
-									<span className="font-medium">Store Directory:</span>{" "}
-									<span className="font-mono text-xs">
-										{config.storeDirectory}
-									</span>
+									<button
+										onClick={() => toggleStoreDir(config._id)}
+										className="font-medium hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer"
+									>
+										Store Directory: {isStoreDirExpanded ? "▼" : "▶"}
+									</button>
+									{isStoreDirExpanded && (
+										<div className="ml-2 mt-1 font-mono text-xs break-all">
+											{config.storeDirectory}
+										</div>
+									)}
 								</div>
+
 								<div className="text-sm text-gray-700 dark:text-gray-300">
 									<span className="font-medium">Framework:</span>{" "}
 									<span className="text-brand-600 dark:text-brand-400">
 										{config.framework}
 									</span>
 								</div>
+							</div>
+
+							{/* Nginx Config Host Details - Expandable */}
+							<div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
+								<button
+									onClick={() => toggleNginxHost(config._id)}
+									className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer"
+								>
+									Nginx Config Host Details {isNginxHostExpanded ? "▼" : "▶"}
+								</button>
+								{isNginxHostExpanded && (
+									<div className="ml-2 space-y-1">
+										<div className="text-sm text-gray-700 dark:text-gray-300">
+											<span className="font-medium">Machine:</span>{" "}
+											<span className="font-mono text-xs">
+												{config.nginxHostServerMachineId.machineName}
+											</span>
+										</div>
+										<div className="text-sm text-gray-700 dark:text-gray-300">
+											<span className="font-medium">IP:</span>{" "}
+											<span className="font-mono">
+												{config.nginxHostServerMachineId.localIpAddress}
+											</span>
+										</div>
+									</div>
+								)}
+							</div>
+						</div>
+					);
+				},
+			},
+			{
+				accessorKey: "appHostServerMachineId.machineName",
+				header: "App Host Machine",
+				enableSorting: true,
+				enableColumnFilter: false,
+				cell: (info) => {
+					const config = info.row.original;
+					return (
+						<div className="space-y-1">
+							<div className="font-medium text-gray-900 dark:text-white">
+								{config.appHostServerMachineId.machineName}
+							</div>
+							<div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+								{config.appHostServerMachineId.localIpAddress}
 							</div>
 						</div>
 					);
@@ -179,7 +256,7 @@ export default function TableNginxFiles({
 				},
 			},
 		],
-		[handleDeleteConfig]
+		[handleDeleteConfig, expandedStoreDir, expandedNginxHost]
 	);
 
 	const table = useReactTable({
