@@ -1,11 +1,12 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import MachineSelect from "@/components/form/MachineSelect";
 import { Machine } from "@/store/features/machines/machineSlice";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 import { useAppSelector } from "@/store/hooks";
+import TableNginxFiles from "@/components/tables/TableNginxFiles";
 
 interface NginxFormState {
 	appHostMachine: Machine | null;
@@ -28,6 +29,13 @@ export default function NginxPage() {
 	const [portError, setPortError] = useState<string>("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [formResetKey, setFormResetKey] = useState(0);
+	const [nginxFiles, setNginxFiles] = useState<any[]>([]);
+	const [loadingFiles, setLoadingFiles] = useState(true);
+	const [deleteConfigModalOpen, setDeleteConfigModalOpen] = useState(false);
+	const [configToDelete, setConfigToDelete] = useState<{
+		id: string;
+		serverName: string;
+	} | null>(null);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
 	const [infoModalData, setInfoModalData] = useState<{
@@ -43,6 +51,47 @@ export default function NginxPage() {
 
 	const token = useAppSelector((state) => state.user.token);
 	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
+
+	// Fetch nginx files on mount and when connected machine changes
+	const fetchNginxFiles = useCallback(async () => {
+		if (!connectedMachine) {
+			setNginxFiles([]);
+			setLoadingFiles(false);
+			return;
+		}
+
+		setLoadingFiles(true);
+
+		try {
+			const response = await fetch(
+				`${connectedMachine.urlFor404Api}/nginx`,
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			if (response.ok) {
+				const data = await response.json();
+				setNginxFiles(Array.isArray(data) ? data : []);
+			} else {
+				console.error("Failed to fetch nginx files");
+				setNginxFiles([]);
+			}
+		} catch (error) {
+			console.error("Error fetching nginx files:", error);
+			setNginxFiles([]);
+		} finally {
+			setLoadingFiles(false);
+		}
+	}, [connectedMachine, token]);
+
+	useEffect(() => {
+		fetchNginxFiles();
+	}, [fetchNginxFiles]);
 
 	const handleAppHostChange = (machine: Machine | null) => {
 		setFormState((prev) => ({ ...prev, appHostMachine: machine }));
@@ -217,6 +266,9 @@ export default function NginxPage() {
 				setPortError("");
 				setFormResetKey((prev) => prev + 1); // Force MachineSelect to reset
 
+				// Refresh nginx files list
+				fetchNginxFiles();
+
 				showInfoModal(
 					"Configuration Created",
 					`Successfully created nginx configuration file at ${resJson?.filePath || "the specified location"}`,
@@ -244,6 +296,62 @@ export default function NginxPage() {
 	) => {
 		setInfoModalData({ title, message, variant });
 		setInfoModalOpen(true);
+	};
+
+	const handleDeleteConfigClick = (configId: string, serverName: string) => {
+		setConfigToDelete({ id: configId, serverName });
+		setDeleteConfigModalOpen(true);
+	};
+
+	const handleDeleteConfigConfirm = async () => {
+		if (!configToDelete || !connectedMachine) return;
+
+		try {
+			const response = await fetch(
+				`${connectedMachine.urlFor404Api}/nginx/${configToDelete.id}`,
+				{
+					method: "DELETE",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			let resJson = null;
+			const contentType = response.headers.get("Content-Type");
+
+			if (contentType?.includes("application/json")) {
+				resJson = await response.json();
+			}
+
+			if (response.ok) {
+				setDeleteConfigModalOpen(false);
+				setConfigToDelete(null);
+
+				// Refresh nginx files list
+				fetchNginxFiles();
+
+				showInfoModal(
+					"Configuration Deleted",
+					`Successfully deleted configuration for ${configToDelete.serverName}`,
+					"success"
+				);
+			} else {
+				const errorMessage = resJson?.error || `Server error: ${response.status}`;
+				setDeleteConfigModalOpen(false);
+				setConfigToDelete(null);
+				showInfoModal("Error", errorMessage, "error");
+			}
+		} catch (error) {
+			setDeleteConfigModalOpen(false);
+			setConfigToDelete(null);
+			showInfoModal(
+				"Error",
+				error instanceof Error ? error.message : "Failed to delete configuration",
+				"error"
+			);
+		}
 	};
 
 	const handleDeleteTableClick = () => {
@@ -282,6 +390,10 @@ export default function NginxPage() {
 
 			if (response.ok) {
 				setDeleteModalOpen(false);
+
+				// Refresh nginx files list
+				fetchNginxFiles();
+
 				showInfoModal(
 					"Table Cleared",
 					`Successfully cleared ${resJson?.deletedCount || 0} nginx configuration records from the database on ${connectedMachine.machineName}.`,
@@ -596,12 +708,49 @@ export default function NginxPage() {
 				<h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
 					Existing Configurations
 				</h2>
-				<div className="text-gray-500 dark:text-gray-400">
-					Table will be implemented here
-				</div>
+				{loadingFiles ? (
+					<div className="text-center py-12">
+						<p className="text-gray-500 dark:text-gray-400">
+							Loading configurations...
+						</p>
+					</div>
+				) : !connectedMachine ? (
+					<div className="text-center py-12">
+						<p className="text-gray-500 dark:text-gray-400">
+							Please connect to a machine to view configurations
+						</p>
+					</div>
+				) : (
+					<TableNginxFiles
+						data={nginxFiles}
+						handleDeleteConfig={handleDeleteConfigClick}
+					/>
+				)}
 			</div>
 
-			{/* Delete Confirmation Modal */}
+			{/* Delete Configuration Modal */}
+			<Modal
+				isOpen={deleteConfigModalOpen}
+				onClose={() => {
+					setDeleteConfigModalOpen(false);
+					setConfigToDelete(null);
+				}}
+			>
+				<ModalInformationYesOrNo
+					title="Delete Nginx Configuration"
+					message={`Are you sure you want to delete the configuration for "${configToDelete?.serverName}"? This will remove the database entry but will NOT delete the actual nginx configuration file from the filesystem. This action cannot be undone.`}
+					onYes={handleDeleteConfigConfirm}
+					onClose={() => {
+						setDeleteConfigModalOpen(false);
+						setConfigToDelete(null);
+					}}
+					yesButtonText="Delete"
+					noButtonText="Cancel"
+					yesButtonStyle="danger"
+				/>
+			</Modal>
+
+			{/* Delete Table Modal */}
 			<Modal
 				isOpen={deleteModalOpen}
 				onClose={() => setDeleteModalOpen(false)}
