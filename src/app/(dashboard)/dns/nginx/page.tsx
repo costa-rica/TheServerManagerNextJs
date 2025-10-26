@@ -8,7 +8,6 @@ import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 import { useAppSelector } from "@/store/hooks";
 
 interface NginxFormState {
-	nginxHostMachine: Machine | null;
 	appHostMachine: Machine | null;
 	serverNames: string[];
 	port: string;
@@ -18,7 +17,6 @@ interface NginxFormState {
 
 export default function NginxPage() {
 	const [formState, setFormState] = useState<NginxFormState>({
-		nginxHostMachine: null,
 		appHostMachine: null,
 		serverNames: [""],
 		port: "",
@@ -44,10 +42,6 @@ export default function NginxPage() {
 
 	const token = useAppSelector((state) => state.user.token);
 	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
-
-	const handleNginxHostChange = (machine: Machine | null) => {
-		setFormState((prev) => ({ ...prev, nginxHostMachine: machine }));
-	};
 
 	const handleAppHostChange = (machine: Machine | null) => {
 		setFormState((prev) => ({ ...prev, appHostMachine: machine }));
@@ -123,9 +117,9 @@ export default function NginxPage() {
 	};
 
 	const validateForm = (): boolean => {
-		// Validate Nginx Host Machine
-		if (!formState.nginxHostMachine) {
-			showInfoModal("Validation Error", "Please select a Nginx Host Machine", "error");
+		// Validate Connected Machine
+		if (!connectedMachine) {
+			showInfoModal("Validation Error", "Please connect to a machine first", "error");
 			return false;
 		}
 
@@ -189,7 +183,7 @@ export default function NginxPage() {
 			};
 
 			const response = await fetch(
-				`${formState.nginxHostMachine!.urlFor404Api}/nginx/create-config-file`,
+				`${connectedMachine!.urlFor404Api}/nginx/create-config-file`,
 				{
 					method: "POST",
 					headers: {
@@ -212,7 +206,6 @@ export default function NginxPage() {
 
 				// Clear form
 				setFormState({
-					nginxHostMachine: null,
 					appHostMachine: null,
 					serverNames: [""],
 					port: "",
@@ -410,13 +403,22 @@ export default function NginxPage() {
 					Create New Configuration
 				</h2>
 				<form onSubmit={handleSubmit} className="space-y-6">
-					{/* Nginx Host Machine */}
+					{/* Nginx Host Machine (Fixed to Connected Machine) */}
 					<div>
-						<MachineSelect
-							label="Nginx Host Machine"
-							placeholder="Select the machine hosting Nginx"
-							onChange={handleNginxHostChange}
-						/>
+						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+							Nginx Host Machine
+						</label>
+						{connectedMachine ? (
+							<div className="h-11 w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-300 flex items-center">
+								<span className="font-mono">
+									{connectedMachine.machineName} - {connectedMachine.urlFor404Api}
+								</span>
+							</div>
+						) : (
+							<p className="text-sm text-warning-600 dark:text-warning-400">
+								No machine connected. Please connect to a machine first.
+							</p>
+						)}
 					</div>
 
 					{/* App Host Machine */}
@@ -541,17 +543,17 @@ export default function NginxPage() {
 						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 							Config Store Directory
 						</label>
-						{!formState.nginxHostMachine ? (
+						{!connectedMachine ? (
 							<p className="text-sm text-gray-500 dark:text-gray-400 italic">
-								Please select a Nginx Host Machine to see available storage directories
+								Please connect to a machine to see available storage directories
 							</p>
-						) : formState.nginxHostMachine.nginxStoragePathOptions.length === 0 ? (
+						) : connectedMachine.nginxStoragePathOptions.length === 0 ? (
 							<p className="text-sm text-warning-600 dark:text-warning-400">
 								No storage path options available for this machine
 							</p>
 						) : (
 							<div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
-								{formState.nginxHostMachine.nginxStoragePathOptions.map((path) => (
+								{connectedMachine.nginxStoragePathOptions.map((path) => (
 									<label
 										key={path}
 										className="flex items-center gap-3 cursor-pointer group"
