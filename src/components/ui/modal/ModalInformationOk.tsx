@@ -65,7 +65,7 @@ export const ModalInformationOk: React.FC<ModalInformationOkProps> = ({
 				<div
 					className={`p-4 rounded-lg border ${styles.border} ${styles.bg}`}
 				>
-					<p className={`text-base ${styles.text}`}>{message}</p>
+					<p className={`text-base whitespace-pre-line ${styles.text}`}>{message}</p>
 				</div>
 			</div>
 

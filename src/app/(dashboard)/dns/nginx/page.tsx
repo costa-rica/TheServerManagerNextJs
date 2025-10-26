@@ -27,6 +27,7 @@ export default function NginxPage() {
 	});
 
 	const [serverNameErrors, setServerNameErrors] = useState<string[]>([""]);
+	const [portError, setPortError] = useState<string>("");
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
 	const [infoModalData, setInfoModalData] = useState<{
@@ -38,6 +39,7 @@ export default function NginxPage() {
 		message: "",
 		variant: "info",
 	});
+	const [isScanning, setIsScanning] = useState(false);
 
 	const token = useAppSelector((state) => state.user.token);
 	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
@@ -89,6 +91,26 @@ export default function NginxPage() {
 			setFormState((prev) => ({ ...prev, serverNames: newServerNames }));
 			setServerNameErrors(newErrors);
 		}
+	};
+
+	// Validate port number (1-65535)
+	const validatePort = (value: string): string => {
+		if (!value.trim()) {
+			return "Port number is required";
+		}
+		const portNum = parseInt(value, 10);
+		if (isNaN(portNum)) {
+			return "Port must be a number";
+		}
+		if (portNum < 1 || portNum > 65535) {
+			return "Port must be between 1 and 65535";
+		}
+		return "";
+	};
+
+	const handlePortChange = (value: string) => {
+		setFormState((prev) => ({ ...prev, port: value }));
+		setPortError(validatePort(value));
 	};
 
 	const showInfoModal = (
@@ -157,6 +179,68 @@ export default function NginxPage() {
 		}
 	};
 
+	const handleScanNginxConfig = async () => {
+		if (!connectedMachine) {
+			showInfoModal(
+				"No Machine Connected",
+				"Please connect to a machine before scanning nginx configurations.",
+				"warning"
+			);
+			return;
+		}
+
+		setIsScanning(true);
+
+		try {
+			const response = await fetch(
+				`${connectedMachine.urlFor404Api}/nginx/scan-nginx-dir`,
+				{
+					method: "GET",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			let resJson = null;
+			const contentType = response.headers.get("Content-Type");
+
+			if (contentType?.includes("application/json")) {
+				resJson = await response.json();
+			}
+
+			if (response.ok) {
+				setIsScanning(false);
+				const { scanned, new: newCount, duplicates, errors } = resJson;
+
+				let message = `Scan completed on ${connectedMachine.machineName}:\n\n`;
+				message += `• Files scanned: ${scanned}\n`;
+				message += `• New entries created: ${newCount}\n`;
+				message += `• Duplicates skipped: ${duplicates}\n`;
+				message += `• Errors encountered: ${errors}`;
+
+				showInfoModal(
+					"Nginx Directory Scan Complete",
+					message,
+					newCount > 0 ? "success" : "info"
+				);
+			} else {
+				const errorMessage =
+					resJson?.error || `Server error: ${response.status}`;
+				setIsScanning(false);
+				showInfoModal("Scan Failed", errorMessage, "error");
+			}
+		} catch (error) {
+			setIsScanning(false);
+			showInfoModal(
+				"Scan Failed",
+				error instanceof Error ? error.message : "Failed to scan nginx directory",
+				"error"
+			);
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
@@ -170,6 +254,18 @@ export default function NginxPage() {
 					</p>
 				</div>
 				<div className="flex gap-3">
+					<button
+						onClick={handleScanNginxConfig}
+						disabled={isScanning}
+						className="px-4 py-2 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center"
+					>
+						<span className="text-lg font-semibold leading-tight">
+							{isScanning ? "Scanning..." : "Scan"}
+						</span>
+						<span className="text-xs font-normal leading-tight">
+							(for nginx config)
+						</span>
+					</button>
 					<button
 						onClick={handleDeleteTableClick}
 						className="px-4 py-2 bg-error-500 hover:bg-error-600 dark:bg-error-600 dark:hover:bg-error-700 text-white rounded-lg font-medium transition-colors"
@@ -254,6 +350,31 @@ export default function NginxPage() {
 							<span className="text-lg leading-none">+</span>
 							Add Additional Server Name
 						</button>
+					</div>
+
+					{/* Port Number */}
+					<div>
+						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+							Port Number
+						</label>
+						<input
+							type="number"
+							value={formState.port}
+							onChange={(e) => handlePortChange(e.target.value)}
+							placeholder="Enter port number (e.g., 3000)"
+							min="1"
+							max="65535"
+							className={`h-11 w-full appearance-none rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs placeholder:text-gray-400 focus:outline-hidden focus:ring-3 ${
+								portError
+									? "border-error-300 focus:border-error-300 focus:ring-error-500/10 dark:border-error-700 dark:focus:border-error-800"
+									: "border-gray-300 focus:border-brand-300 focus:ring-brand-500/10 dark:border-gray-700 dark:focus:border-brand-800"
+							} dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30`}
+						/>
+						{portError && (
+							<p className="mt-1 text-xs text-error-600 dark:text-error-400">
+								{portError}
+							</p>
+						)}
 					</div>
 
 					{/* Placeholder for additional form fields */}
