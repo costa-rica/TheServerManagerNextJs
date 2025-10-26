@@ -24,6 +24,7 @@ Authorization: Bearer <your_jwt_token>
 - [User Routes](#user-routes)
 - [Machine Routes](#machine-routes)
 - [PM2 Routes](#pm2-routes)
+- [Nginx Routes](#nginx-routes)
 
 ---
 
@@ -824,4 +825,415 @@ curl --location 'http://localhost:3000/pm2/logs/Samurai04Web?type=out&lines=700'
 
 ```json
 { "error": "Failed to read log file" }
+```
+
+## Nginx Routes
+
+### GET /nginx
+
+Get all nginx configuration files from the database with populated machine references.
+
+**Authentication:** Required (JWT token)
+
+**Request:**
+
+```http
+GET /nginx HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/nginx' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+[
+	{
+		"_id": "507f1f77bcf86cd799439011",
+		"serverName": "api.example.com",
+		"serverNameArrayOfAdditionalServerNames": ["www.api.example.com"],
+		"portNumber": 3000,
+		"appHostServerMachineId": {
+			"_id": "507f1f77bcf86cd799439012",
+			"machineName": "ubuntu-server-01",
+			"localIpAddress": "192.168.1.100"
+		},
+		"nginxHostServerMachineId": {
+			"_id": "507f1f77bcf86cd799439013",
+			"machineName": "nginx-server-01",
+			"localIpAddress": "192.168.1.50"
+		},
+		"framework": "ExpressJs",
+		"storeDirectory": "/etc/nginx/sites-available",
+		"createdAt": "2025-10-23T10:30:00.000Z",
+		"updatedAt": "2025-10-23T10:30:00.000Z"
+	}
+]
+```
+
+**Error Responses:**
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to fetch nginx files"
+}
+```
+
+---
+
+### GET /nginx/scan-nginx-dir
+
+Scan the nginx directory for configuration files and parse them into the database. Reads files from `/etc/nginx/sites-available/`, parses each config file, and creates database entries for new configurations.
+
+**Authentication:** Required (JWT token)
+
+**Request:**
+
+```http
+GET /nginx/scan-nginx-dir HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/nginx/scan-nginx-dir' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"scanned": 5,
+	"new": 3,
+	"duplicates": 1,
+	"errors": 1,
+	"currentMachineIp": "192.168.1.50",
+	"nginxHostMachineId": "507f1f77bcf86cd799439013",
+	"newEntries": [
+		{
+			"fileName": "api.example.com",
+			"serverName": "api.example.com",
+			"additionalServerNames": ["www.api.example.com"],
+			"portNumber": 3000,
+			"localIpAddress": "192.168.1.100",
+			"framework": "ExpressJs",
+			"appHostMachineFound": true,
+			"databaseId": "507f1f77bcf86cd799439011"
+		}
+	],
+	"duplicateEntries": [
+		{
+			"fileName": "duplicate.example.com",
+			"serverName": "duplicate.example.com",
+			"additionalServerNames": [],
+			"portNumber": 8080,
+			"localIpAddress": "192.168.1.101",
+			"framework": "ExpressJs",
+			"reason": "Server name already exists in database"
+		}
+	],
+	"errorEntries": [
+		{
+			"fileName": "malformed-config",
+			"error": "No server names found in config file"
+		}
+	]
+}
+```
+
+**Notes:**
+
+- Scans the directory specified in `PATH_ETC_NGINX_SITES_AVAILABLE` environment variable
+- Automatically filters out the 'default' config file
+- Parses each config file to extract server names, port, IP address, and framework
+- Creates database entries only for new configurations (skips duplicates)
+- Returns detailed information about new entries, duplicates, and errors
+
+**Error Responses:**
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**404 Not Found - Current Machine Not Found:**
+
+```json
+{
+	"error": "Current machine not found in database",
+	"currentIp": "192.168.1.50"
+}
+```
+
+**500 Internal Server Error - Directory Read Failed:**
+
+```json
+{
+	"error": "Failed to read nginx directory: /etc/nginx/sites-available",
+	"details": "ENOENT: no such file or directory"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to scan nginx directory"
+}
+```
+
+---
+
+### POST /nginx/create-config-file
+
+Create a new nginx configuration file from a template and save it to the specified nginx directory.
+
+**Authentication:** Required (JWT token)
+
+**Request Body:**
+
+```json
+{
+	"templateFileName": "express-api.conf",
+	"serverNamesArray": ["api.example.com", "www.api.example.com"],
+	"appHostServerMachineId": "507f1f77bcf86cd799439012",
+	"portNumber": 3000,
+	"saveDestination": "sites-available"
+}
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/nginx/create-config-file' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
+--data-raw '{
+  "templateFileName": "express-api.conf",
+  "serverNamesArray": ["api.example.com", "www.api.example.com"],
+  "appHostServerMachineId": "507f1f77bcf86cd799439012",
+  "portNumber": 3000,
+  "saveDestination": "sites-available"
+}'
+```
+
+**Success Response (201 Created):**
+
+```json
+{
+	"message": "Nginx config file created successfully",
+	"filePath": "/etc/nginx/sites-available/api.example.com",
+	"databaseRecord": {
+		"_id": "507f1f77bcf86cd799439011",
+		"serverName": "api.example.com",
+		"serverNameArrayOfAdditionalServerNames": ["www.api.example.com"],
+		"portNumber": 3000,
+		"appHostServerMachineId": "507f1f77bcf86cd799439012",
+		"nginxHostServerMachineId": "507f1f77bcf86cd799439013",
+		"framework": "ExpressJs",
+		"storeDirectory": "/etc/nginx/sites-available",
+		"createdAt": "2025-10-23T10:30:00.000Z",
+		"updatedAt": "2025-10-23T10:30:00.000Z"
+	}
+}
+```
+
+**Notes:**
+
+- Template files must exist in the templates directory
+- `saveDestination` must be either `'sites-available'` or `'conf.d'`
+- The machine specified by `appHostServerMachineId` must exist and have a `localIpAddress` field
+- Creates both the physical nginx config file and a database record
+
+**Error Responses:**
+
+**400 Bad Request - Missing Fields:**
+
+```json
+{
+	"error": "Missing templateFileName, serverNamesArray, appHostServerMachineId, portNumber, saveDestination"
+}
+```
+
+**400 Bad Request - Invalid Template File Name:**
+
+```json
+{
+	"error": "templateFileName must be a non-empty string"
+}
+```
+
+**400 Bad Request - Invalid Server Names Array:**
+
+```json
+{
+	"error": "serverNamesArray must be a non-empty array"
+}
+```
+
+**400 Bad Request - Invalid Server Names:**
+
+```json
+{
+	"error": "All server names must be non-empty strings"
+}
+```
+
+**400 Bad Request - Invalid Machine ID:**
+
+```json
+{
+	"error": "appHostServerMachineId must be a valid ObjectId"
+}
+```
+
+**400 Bad Request - Machine Not Found:**
+
+```json
+{
+	"error": "Machine with specified appHostServerMachineId not found"
+}
+```
+
+**400 Bad Request - Invalid Port Number:**
+
+```json
+{
+	"error": "portNumber must be a number between 1 and 65535"
+}
+```
+
+**400 Bad Request - Invalid Save Destination:**
+
+```json
+{
+	"error": "saveDestination must be either 'sites-available' or 'conf.d'"
+}
+```
+
+**400 Bad Request - Template Not Found:**
+
+```json
+{
+	"error": "Template file 'express-api.conf' not found"
+}
+```
+
+**400 Bad Request - Missing Local IP:**
+
+```json
+{
+	"error": "Machine document does not have a localIpAddress field"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**404 Not Found - Current Machine Not Found:**
+
+```json
+{
+	"error": "Current machine not found in database",
+	"currentIp": "192.168.1.50"
+}
+```
+
+**500 Internal Server Error - Config Creation Failed:**
+
+```json
+{
+	"error": "Failed to create nginx config file",
+	"details": "Error details here"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to create nginx config file"
+}
+```
+
+---
+
+### DELETE /nginx/clear
+
+Clear all nginx configuration file records from the database. This does not delete the actual nginx config files from the filesystem.
+
+**Authentication:** Required (JWT token)
+
+**Request:**
+
+```http
+DELETE /nginx/clear HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location --request DELETE 'http://localhost:3000/nginx/clear' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"message": "NginxFiles collection cleared successfully",
+	"deletedCount": 12
+}
+```
+
+**Notes:**
+
+- This operation only removes database records, not the actual nginx configuration files
+- Returns the count of deleted records
+
+**Error Responses:**
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to clear nginx files"
+}
 ```
