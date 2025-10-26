@@ -117,6 +117,10 @@ export default function NginxPage() {
 		setFormState((prev) => ({ ...prev, framework: value }));
 	};
 
+	const handleStoreDirectoryChange = (value: string) => {
+		setFormState((prev) => ({ ...prev, storeDirectory: value }));
+	};
+
 	const showInfoModal = (
 		title: string,
 		message: string,
@@ -386,7 +390,7 @@ export default function NginxPage() {
 						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 							App Technology
 						</label>
-						<div className="flex flex-col gap-3">
+						<div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
 							{[
 								{ label: "ExpressJS", value: "expressJs" },
 								{ label: "Next.js / Python", value: "nextJsPython" }
@@ -409,6 +413,43 @@ export default function NginxPage() {
 								</label>
 							))}
 						</div>
+					</div>
+
+					{/* Config Store Directory */}
+					<div>
+						<label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+							Config Store Directory
+						</label>
+						{!formState.nginxHostMachine ? (
+							<p className="text-sm text-gray-500 dark:text-gray-400 italic">
+								Please select a Nginx Host Machine to see available storage directories
+							</p>
+						) : formState.nginxHostMachine.nginxStoragePathOptions.length === 0 ? (
+							<p className="text-sm text-warning-600 dark:text-warning-400">
+								No storage path options available for this machine
+							</p>
+						) : (
+							<div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
+								{formState.nginxHostMachine.nginxStoragePathOptions.map((path) => (
+									<label
+										key={path}
+										className="flex items-center gap-3 cursor-pointer group"
+									>
+										<input
+											type="radio"
+											name="storeDirectory"
+											value={path}
+											checked={formState.storeDirectory === path}
+											onChange={(e) => handleStoreDirectoryChange(e.target.value)}
+											className="h-4 w-4 border-gray-300 text-brand-500 focus:ring-2 focus:ring-brand-500/20 dark:border-gray-700 dark:bg-gray-900 cursor-pointer"
+										/>
+										<span className="text-sm text-gray-700 dark:text-gray-300 group-hover:text-brand-500 dark:group-hover:text-brand-400 transition-colors font-mono">
+											{path}
+										</span>
+									</label>
+								))}
+							</div>
+						)}
 					</div>
 
 					{/* Placeholder for additional form fields */}
