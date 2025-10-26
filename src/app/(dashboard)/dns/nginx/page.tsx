@@ -28,6 +28,7 @@ export default function NginxPage() {
 
 	const [serverNameErrors, setServerNameErrors] = useState<string[]>([""]);
 	const [portError, setPortError] = useState<string>("");
+	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
 	const [infoModalData, setInfoModalData] = useState<{
@@ -119,6 +120,126 @@ export default function NginxPage() {
 
 	const handleStoreDirectoryChange = (value: string) => {
 		setFormState((prev) => ({ ...prev, storeDirectory: value }));
+	};
+
+	const validateForm = (): boolean => {
+		// Validate Nginx Host Machine
+		if (!formState.nginxHostMachine) {
+			showInfoModal("Validation Error", "Please select a Nginx Host Machine", "error");
+			return false;
+		}
+
+		// Validate App Host Machine
+		if (!formState.appHostMachine) {
+			showInfoModal("Validation Error", "Please select an App Host Machine", "error");
+			return false;
+		}
+
+		// Validate Server Names
+		const validServerNames = formState.serverNames.filter((name) => name.trim() !== "");
+		if (validServerNames.length === 0) {
+			showInfoModal("Validation Error", "Please enter at least one server name", "error");
+			return false;
+		}
+
+		// Check for server name errors
+		const hasServerNameErrors = serverNameErrors.some((error) => error !== "");
+		if (hasServerNameErrors) {
+			showInfoModal("Validation Error", "Please fix server name errors before submitting", "error");
+			return false;
+		}
+
+		// Validate Port
+		if (!formState.port || portError) {
+			showInfoModal("Validation Error", "Please enter a valid port number (1-65535)", "error");
+			return false;
+		}
+
+		// Validate Framework
+		if (!formState.framework) {
+			showInfoModal("Validation Error", "Please select an app technology", "error");
+			return false;
+		}
+
+		// Validate Store Directory
+		if (!formState.storeDirectory) {
+			showInfoModal("Validation Error", "Please select a config store directory", "error");
+			return false;
+		}
+
+		return true;
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!validateForm()) {
+			return;
+		}
+
+		setIsSubmitting(true);
+
+		try {
+			const payload = {
+				templateFileName: formState.framework,
+				serverNamesArray: formState.serverNames.filter((name) => name.trim() !== ""),
+				appHostServerMachineId: formState.appHostMachine!._id,
+				portNumber: parseInt(formState.port, 10),
+				saveDestination: formState.storeDirectory,
+			};
+
+			const response = await fetch(
+				`${formState.nginxHostMachine!.urlFor404Api}/nginx/create-config-file`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+					body: JSON.stringify(payload),
+				}
+			);
+
+			let resJson = null;
+			const contentType = response.headers.get("Content-Type");
+
+			if (contentType?.includes("application/json")) {
+				resJson = await response.json();
+			}
+
+			if (response.ok) {
+				setIsSubmitting(false);
+
+				// Clear form
+				setFormState({
+					nginxHostMachine: null,
+					appHostMachine: null,
+					serverNames: [""],
+					port: "",
+					framework: "",
+					storeDirectory: "",
+				});
+				setServerNameErrors([""]);
+				setPortError("");
+
+				showInfoModal(
+					"Configuration Created",
+					`Successfully created nginx configuration file at ${resJson?.filePath || "the specified location"}`,
+					"success"
+				);
+			} else {
+				const errorMessage = resJson?.error || `Server error: ${response.status}`;
+				setIsSubmitting(false);
+				showInfoModal("Error", errorMessage, "error");
+			}
+		} catch (error) {
+			setIsSubmitting(false);
+			showInfoModal(
+				"Error",
+				error instanceof Error ? error.message : "Failed to create nginx config file",
+				"error"
+			);
+		}
 	};
 
 	const showInfoModal = (
@@ -288,7 +409,7 @@ export default function NginxPage() {
 				<h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
 					Create New Configuration
 				</h2>
-				<form className="space-y-6">
+				<form onSubmit={handleSubmit} className="space-y-6">
 					{/* Nginx Host Machine */}
 					<div>
 						<MachineSelect
@@ -452,9 +573,15 @@ export default function NginxPage() {
 						)}
 					</div>
 
-					{/* Placeholder for additional form fields */}
-					<div className="text-gray-500 dark:text-gray-400 text-sm italic">
-						Additional form fields will be added in subsequent cards...
+					{/* Submit Button */}
+					<div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-800">
+						<button
+							type="submit"
+							disabled={isSubmitting}
+							className="px-6 py-2.5 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+						>
+							{isSubmitting ? "Creating Configuration..." : "Create Configuration"}
+						</button>
 					</div>
 				</form>
 			</div>
