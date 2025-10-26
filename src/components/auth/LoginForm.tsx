@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/store/features/user/userSlice";
-import { useTheme } from "@/context/ThemeContext";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
@@ -30,7 +29,6 @@ export default function LoginForm() {
 	});
 	const dispatch = useAppDispatch();
 	const router = useRouter();
-	const { theme } = useTheme();
 	// const userReducer = useSelector((state) => state.user);
 	const userReducer = useAppSelector((s) => s.user);
 
@@ -49,8 +47,6 @@ export default function LoginForm() {
 			router.push("/servers/machines");
 			return;
 		}
-
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [userReducer.token, router]);
 
 	const handleClickLogin = async () => {

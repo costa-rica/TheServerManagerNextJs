@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
 
 interface ModalPm2AppLogsProps {
@@ -11,7 +11,8 @@ type LogType = "out" | "err";
 
 export const ModalPm2AppLogs: React.FC<ModalPm2AppLogsProps> = ({
 	appName,
-	onClose,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	onClose: _onClose,
 }) => {
 	const [activeTab, setActiveTab] = useState<LogType>("out");
 	const [logs, setLogs] = useState<string>("");
@@ -24,7 +25,7 @@ export const ModalPm2AppLogs: React.FC<ModalPm2AppLogsProps> = ({
 	);
 
 	// Fetch logs function
-	const fetchLogs = async (type: LogType) => {
+	const fetchLogs = useCallback(async (type: LogType) => {
 		if (!urlFor404Api) {
 			setError("No machine connected");
 			setLoading(false);
@@ -64,7 +65,7 @@ export const ModalPm2AppLogs: React.FC<ModalPm2AppLogsProps> = ({
 			setError(err instanceof Error ? err.message : "Failed to fetch logs");
 			setLoading(false);
 		}
-	};
+	}, [urlFor404Api, appName, token]);
 
 	// Poll logs every second when tab changes or component mounts
 	useEffect(() => {
@@ -76,7 +77,7 @@ export const ModalPm2AppLogs: React.FC<ModalPm2AppLogsProps> = ({
 		}, 1000);
 
 		return () => clearInterval(interval);
-	}, [activeTab, appName, urlFor404Api, token]);
+	}, [activeTab, fetchLogs]);
 
 	const handleTabChange = (tab: LogType) => {
 		setActiveTab(tab);

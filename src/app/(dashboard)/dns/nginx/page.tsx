@@ -8,6 +8,40 @@ import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 import { useAppSelector } from "@/store/hooks";
 import TableNginxFiles from "@/components/tables/TableNginxFiles";
 
+interface NginxFile {
+	_id: string;
+	serverName: string;
+	portNumber: number;
+	serverNameArrayOfAdditionalServerNames: string[];
+	appHostServerMachineId: {
+		_id: string;
+		machineName: string;
+		urlFor404Api: string;
+		localIpAddress: string;
+		userHomeDir: string;
+		nginxStoragePathOptions: string[];
+		createdAt: string;
+		updatedAt: string;
+		__v: number;
+	};
+	nginxHostServerMachineId: {
+		_id: string;
+		machineName: string;
+		urlFor404Api: string;
+		localIpAddress: string;
+		userHomeDir: string;
+		nginxStoragePathOptions: string[];
+		createdAt: string;
+		updatedAt: string;
+		__v: number;
+	};
+	framework: string;
+	storeDirectory: string;
+	createdAt: string;
+	updatedAt: string;
+	__v: number;
+}
+
 interface NginxFormState {
 	appHostMachine: Machine | null;
 	serverNames: string[];
@@ -29,7 +63,7 @@ export default function NginxPage() {
 	const [portError, setPortError] = useState<string>("");
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [formResetKey, setFormResetKey] = useState(0);
-	const [nginxFiles, setNginxFiles] = useState<any[]>([]);
+	const [nginxFiles, setNginxFiles] = useState<NginxFile[]>([]);
 	const [loadingFiles, setLoadingFiles] = useState(true);
 	const [deleteConfigModalOpen, setDeleteConfigModalOpen] = useState(false);
 	const [configToDelete, setConfigToDelete] = useState<{

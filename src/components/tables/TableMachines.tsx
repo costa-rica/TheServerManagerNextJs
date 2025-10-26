@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -42,9 +42,12 @@ export default function TableMachines({
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
 
-	const handleConnect = (machine: Machine) => {
-		dispatch(connectMachine(machine));
-	};
+	const handleConnect = useCallback(
+		(machine: Machine) => {
+			dispatch(connectMachine(machine));
+		},
+		[dispatch]
+	);
 
 	const columns = useMemo<ColumnDef<Machine>[]>(
 		() => [
@@ -118,7 +121,7 @@ export default function TableMachines({
 				},
 			},
 		],
-		[connectedMachineName, handleDeleteMachine]
+		[connectedMachineName, handleDeleteMachine, handleConnect]
 	);
 
 	const table = useReactTable({
