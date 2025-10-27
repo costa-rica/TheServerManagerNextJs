@@ -19,7 +19,7 @@ const rootReducer = combineReducers({ user, machine });
 const persistConfig = {
 	key: "root",
 	storage,
-	whitelist: ["user"], // persist only user slice
+	whitelist: ["user", "machine"], // persist user and machine slices
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

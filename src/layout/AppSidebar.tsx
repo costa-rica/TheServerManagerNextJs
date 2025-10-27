@@ -11,6 +11,7 @@ import {
 	DatabaseIcon,
 	GlobeIcon,
 	LogoutIcon,
+	GearIcon,
 } from "../icons/index";
 import SidebarWidget from "./SidebarWidget";
 import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
@@ -39,6 +40,11 @@ const navItems: NavItem[] = [
 			{ name: "Nginx", path: "/dns/nginx", pro: false },
 			{ name: "Registrar", path: "/dns/registrar", pro: false },
 		],
+	},
+	{
+		icon: <GearIcon />,
+		name: "Admin",
+		path: "/admin",
 	},
 	{
 		icon: <LogoutIcon />,

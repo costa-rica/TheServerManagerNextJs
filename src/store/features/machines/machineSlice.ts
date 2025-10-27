@@ -13,11 +13,13 @@ export interface Machine {
 export interface MachineState {
 	machinesArray: Machine[];
 	connectedMachine: Machine | null;
+	defaultMachine: Machine | null;
 }
 
 const initialState: MachineState = {
 	machinesArray: [],
 	connectedMachine: null,
+	defaultMachine: null,
 };
 
 export const machineSlice = createSlice({
@@ -36,6 +38,14 @@ export const machineSlice = createSlice({
 			state.connectedMachine = null;
 		},
 
+		setDefaultMachine: (state, action: PayloadAction<Machine | null>) => {
+			state.defaultMachine = action.payload;
+		},
+
+		clearDefaultMachine: (state) => {
+			state.defaultMachine = null;
+		},
+
 		clearMachines: (state) => {
 			state.machinesArray = [];
 			state.connectedMachine = null;
@@ -47,6 +57,8 @@ export const {
 	setMachinesArray,
 	connectMachine,
 	disconnectMachine,
+	setDefaultMachine,
+	clearDefaultMachine,
 	clearMachines,
 } = machineSlice.actions;
 
