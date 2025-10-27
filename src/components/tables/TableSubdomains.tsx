@@ -89,7 +89,7 @@ export default function TableSubdomains({
 							header: "Delete",
 							enableSorting: false,
 							enableColumnFilter: false,
-							cell: (info: any) => {
+							cell: (info) => {
 								const isNSRecord = info.row.original.type === "NS";
 								return (
 									<button
@@ -107,14 +107,18 @@ export default function TableSubdomains({
 												? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
 												: "bg-error-100 hover:bg-error-200 dark:bg-error-900/20 dark:hover:bg-error-900/30 text-error-700 dark:text-error-400 cursor-pointer"
 										}`}
-										title={isNSRecord ? "NS records cannot be deleted" : "Delete this record"}
+										title={
+											isNSRecord
+												? "NS records cannot be deleted"
+												: "Delete this record"
+										}
 									>
 										Delete
 									</button>
 								);
 							},
 						} as ColumnDef<Subdomain>,
-					]
+				  ]
 				: []),
 		],
 		[handleDeleteSubdomain]
@@ -157,7 +161,11 @@ export default function TableSubdomains({
 						Show:
 					</label>
 					<select
-						value={pagination.pageSize >= data.length && data.length > 10 ? "all" : pagination.pageSize}
+						value={
+							pagination.pageSize >= data.length && data.length > 10
+								? "all"
+								: pagination.pageSize
+						}
 						onChange={(e) => {
 							const value = e.target.value;
 							table.setPageSize(value === "all" ? data.length : Number(value));
@@ -279,15 +287,23 @@ export default function TableSubdomains({
 			{/* Record Count Info */}
 			<div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
 				<div>
-					Showing {table.getRowModel().rows.length === 0 ? 0 : table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+					Showing{" "}
+					{table.getRowModel().rows.length === 0
+						? 0
+						: table.getState().pagination.pageIndex *
+								table.getState().pagination.pageSize +
+						  1}{" "}
+					to{" "}
 					{Math.min(
-						(table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+						(table.getState().pagination.pageIndex + 1) *
+							table.getState().pagination.pageSize,
 						table.getFilteredRowModel().rows.length
 					)}{" "}
 					of {table.getFilteredRowModel().rows.length} entries
 					{globalFilter && (
 						<span className="text-gray-500 dark:text-gray-500">
-							{" "}(filtered from {data.length} total)
+							{" "}
+							(filtered from {data.length} total)
 						</span>
 					)}
 				</div>

@@ -1,7 +1,9 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppSelector } from "@/store/hooks";
-import TableSubdomains, { Subdomain } from "@/components/tables/TableSubdomains";
+import TableSubdomains, {
+	Subdomain,
+} from "@/components/tables/TableSubdomains";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
@@ -18,7 +20,8 @@ export default function RegistrarPage() {
 	const [domains, setDomains] = useState<Domain[]>([]);
 	const [selectedDomain, setSelectedDomain] = useState<string>("");
 	const [loadingDomains, setLoadingDomains] = useState(true);
-	const [deleteSubdomainModalOpen, setDeleteSubdomainModalOpen] = useState(false);
+	const [deleteSubdomainModalOpen, setDeleteSubdomainModalOpen] =
+		useState(false);
 	const [subdomainToDelete, setSubdomainToDelete] = useState<{
 		id: string;
 		name: string;
@@ -42,7 +45,9 @@ export default function RegistrarPage() {
 	const [submitting, setSubmitting] = useState(false);
 
 	const token = useAppSelector((state) => state.user.token);
-	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
+	const connectedMachine = useAppSelector(
+		(state) => state.machine.connectedMachine
+	);
 
 	// Fetch domains on mount and when connected machine changes
 	const fetchDomains = useCallback(async () => {
@@ -86,8 +91,11 @@ export default function RegistrarPage() {
 				setDomains([]);
 
 				// Display error to user
-				const errorMessage = resJson?.error || `Server error: ${response.status}`;
-				const errorFrom = resJson?.errorFrom ? ` (from ${resJson.errorFrom})` : "";
+				const errorMessage =
+					resJson?.error || `Server error: ${response.status}`;
+				const errorFrom = resJson?.errorFrom
+					? ` (from ${resJson.errorFrom})`
+					: "";
 				showInfoModal(
 					"Failed to Load Domains",
 					`${errorMessage}${errorFrom}`,
@@ -144,15 +152,17 @@ export default function RegistrarPage() {
 				const subdomainsArray = resJson?.subdomainsArray || [];
 
 				// Transform API response to match Subdomain interface
-				const transformedSubdomains = subdomainsArray.map((subdomain: any, index: number) => ({
-					_id: `${subdomain.name}-${subdomain.type}-${index}`, // Generate unique ID
-					name: subdomain.name,
-					type: subdomain.type,
-					content: subdomain.content,
-					ttl: subdomain.ttl || 600, // Default TTL if not provided
-					prio: subdomain.prio,
-					notes: subdomain.notes,
-				}));
+				const transformedSubdomains = subdomainsArray.map(
+					(subdomain: Subdomain, index: number) => ({
+						_id: `${subdomain.name}-${subdomain.type}-${index}`, // Generate unique ID
+						name: subdomain.name,
+						type: subdomain.type,
+						content: subdomain.content,
+						ttl: subdomain.ttl || 600, // Default TTL if not provided
+						prio: subdomain.prio,
+						notes: subdomain.notes,
+					})
+				);
 
 				setSubdomains(transformedSubdomains);
 			} else {
@@ -160,8 +170,11 @@ export default function RegistrarPage() {
 				setSubdomains([]);
 
 				// Display error to user
-				const errorMessage = resJson?.error || `Server error: ${response.status}`;
-				const errorFrom = resJson?.errorFrom ? ` (from ${resJson.errorFrom})` : "";
+				const errorMessage =
+					resJson?.error || `Server error: ${response.status}`;
+				const errorFrom = resJson?.errorFrom
+					? ` (from ${resJson.errorFrom})`
+					: "";
 				showInfoModal(
 					"Failed to Load DNS Records",
 					`${errorMessage}${errorFrom}`,
@@ -194,11 +207,18 @@ export default function RegistrarPage() {
 		setInfoModalOpen(true);
 	};
 
-	const handleDeleteSubdomainClick = (subdomainId: string, subdomainName: string) => {
+	const handleDeleteSubdomainClick = (
+		subdomainId: string,
+		subdomainName: string
+	) => {
 		// Find the subdomain in the array to get its type
 		const subdomain = subdomains.find((s) => s._id === subdomainId);
 		if (subdomain) {
-			setSubdomainToDelete({ id: subdomainId, name: subdomainName, type: subdomain.type });
+			setSubdomainToDelete({
+				id: subdomainId,
+				name: subdomainName,
+				type: subdomain.type,
+			});
 			setDeleteSubdomainModalOpen(true);
 		}
 	};
@@ -259,8 +279,11 @@ export default function RegistrarPage() {
 					"success"
 				);
 			} else {
-				const errorMessage = resJson?.error || `Server error: ${response.status}`;
-				const errorFrom = resJson?.errorFrom ? ` (from ${resJson.errorFrom})` : "";
+				const errorMessage =
+					resJson?.error || `Server error: ${response.status}`;
+				const errorFrom = resJson?.errorFrom
+					? ` (from ${resJson.errorFrom})`
+					: "";
 				setDeleteSubdomainModalOpen(false);
 				setSubdomainToDelete(null);
 				showInfoModal("Error", `${errorMessage}${errorFrom}`, "error");
@@ -336,8 +359,11 @@ export default function RegistrarPage() {
 					"success"
 				);
 			} else {
-				const errorMessage = resJson?.error || `Server error: ${response.status}`;
-				const errorFrom = resJson?.errorFrom ? ` (from ${resJson.errorFrom})` : "";
+				const errorMessage =
+					resJson?.error || `Server error: ${response.status}`;
+				const errorFrom = resJson?.errorFrom
+					? ` (from ${resJson.errorFrom})`
+					: "";
 				showInfoModal("Error", `${errorMessage}${errorFrom}`, "error");
 			}
 		} catch (error) {
