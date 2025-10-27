@@ -8,9 +8,11 @@ import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 import { Modal } from "@/components/ui/modal";
 
 interface DownloadFile {
-	filename: string;
-	size?: number;
-	createdAt?: string;
+	fileName: string;
+	size: number;
+	sizeKB: string;
+	modifiedDate: string;
+	isFile: boolean;
 }
 
 export default function AdminPage() {
@@ -74,7 +76,7 @@ export default function AdminPage() {
 
 			if (response.ok) {
 				const data = await response.json();
-				setDownloadFiles(Array.isArray(data) ? data : []);
+				setDownloadFiles(Array.isArray(data.files) ? data.files : []);
 			} else {
 				console.error("Failed to fetch download files");
 				setDownloadFiles([]);
@@ -272,24 +274,19 @@ export default function AdminPage() {
 					<div className="space-y-2">
 						{downloadFiles.map((file) => (
 							<div
-								key={file.filename}
+								key={file.fileName}
 								className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
 							>
 								<div className="flex-1">
 									<p className="font-medium text-gray-900 dark:text-white font-mono text-sm">
-										{file.filename}
+										{file.fileName}
 									</p>
-									{(file.size || file.createdAt) && (
-										<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-											{file.size && `${(file.size / 1024).toFixed(2)} KB`}
-											{file.size && file.createdAt && " • "}
-											{file.createdAt &&
-												new Date(file.createdAt).toLocaleDateString()}
-										</p>
-									)}
+									<p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+										{file.sizeKB} KB • {new Date(file.modifiedDate).toLocaleDateString()}
+									</p>
 								</div>
 								<button
-									onClick={() => handleDownloadFile(file.filename)}
+									onClick={() => handleDownloadFile(file.fileName)}
 									className="px-4 py-2 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors text-sm"
 								>
 									Download
