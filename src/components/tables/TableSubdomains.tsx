@@ -7,7 +7,9 @@ import {
 	ColumnDef,
 	getSortedRowModel,
 	getFilteredRowModel,
+	getPaginationRowModel,
 	SortingState,
+	PaginationState,
 } from "@tanstack/react-table";
 
 export interface Subdomain {
@@ -33,6 +35,10 @@ export default function TableSubdomains({
 }: TableSubdomainsProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
+	const [pagination, setPagination] = useState<PaginationState>({
+		pageIndex: 0,
+		pageSize: 10,
+	});
 
 	const columns = useMemo<ColumnDef<Subdomain>[]>(
 		() => [
@@ -120,12 +126,15 @@ export default function TableSubdomains({
 		state: {
 			sorting,
 			globalFilter,
+			pagination,
 		},
 		onSortingChange: setSorting,
 		onGlobalFilterChange: setGlobalFilter,
+		onPaginationChange: setPagination,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
 	});
 
 	if (data.length === 0) {
@@ -140,6 +149,52 @@ export default function TableSubdomains({
 
 	return (
 		<div className="space-y-4">
+			{/* Controls Bar */}
+			<div className="flex items-center justify-between gap-4">
+				{/* Left: Page Size Selector */}
+				<div className="flex items-center gap-2">
+					<label className="text-sm text-gray-700 dark:text-gray-300">
+						Show:
+					</label>
+					<select
+						value={pagination.pageSize >= data.length && data.length > 10 ? "all" : pagination.pageSize}
+						onChange={(e) => {
+							const value = e.target.value;
+							table.setPageSize(value === "all" ? data.length : Number(value));
+						}}
+						className="px-3 py-1.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white"
+					>
+						<option value={10}>10</option>
+						<option value="all">All</option>
+					</select>
+					<span className="text-sm text-gray-500 dark:text-gray-400">
+						entries
+					</span>
+				</div>
+
+				{/* Right: Pagination Controls */}
+				<div className="flex items-center gap-2">
+					<button
+						onClick={() => table.previousPage()}
+						disabled={!table.getCanPreviousPage()}
+						className="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					>
+						Previous
+					</button>
+					<span className="text-sm text-gray-700 dark:text-gray-300">
+						Page {table.getState().pagination.pageIndex + 1} of{" "}
+						{table.getPageCount()}
+					</span>
+					<button
+						onClick={() => table.nextPage()}
+						disabled={!table.getCanNextPage()}
+						className="px-4 py-1.5 text-sm font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+					>
+						Next
+					</button>
+				</div>
+			</div>
+
 			{/* Search Input */}
 			<div className="flex items-center gap-4">
 				<input
@@ -160,7 +215,7 @@ export default function TableSubdomains({
 								{headerGroup.headers.map((header) => (
 									<th
 										key={header.id}
-										className="px-6 py-4 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
+										className="px-6 py-3 text-left text-sm font-medium text-gray-700 dark:text-gray-300"
 									>
 										{header.isPlaceholder ? null : (
 											<div
@@ -207,7 +262,7 @@ export default function TableSubdomains({
 									className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
 								>
 									{row.getVisibleCells().map((cell) => (
-										<td key={cell.id} className="px-6 py-4">
+										<td key={cell.id} className="px-6 py-3">
 											{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext()
@@ -219,6 +274,23 @@ export default function TableSubdomains({
 						)}
 					</tbody>
 				</table>
+			</div>
+
+			{/* Record Count Info */}
+			<div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+				<div>
+					Showing {table.getRowModel().rows.length === 0 ? 0 : table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+					{Math.min(
+						(table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+						table.getFilteredRowModel().rows.length
+					)}{" "}
+					of {table.getFilteredRowModel().rows.length} entries
+					{globalFilter && (
+						<span className="text-gray-500 dark:text-gray-500">
+							{" "}(filtered from {data.length} total)
+						</span>
+					)}
+				</div>
 			</div>
 		</div>
 	);

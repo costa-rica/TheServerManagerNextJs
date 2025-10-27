@@ -353,9 +353,9 @@ export default function RegistrarPage() {
 
 	return (
 		<div className="space-y-6">
-			{/* Page Header */}
-			<div className="flex items-start justify-between">
-				<div>
+			{/* Page Header with Domain Selection */}
+			<div className="flex items-start justify-between gap-6">
+				<div className="flex-shrink-0">
 					<h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
 						Porkbun Registrar
 					</h1>
@@ -363,30 +363,28 @@ export default function RegistrarPage() {
 						Manage DNS records through Porkbun API
 					</p>
 				</div>
-			</div>
 
-			{/* Domain Selection */}
-			<div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-6">
-				<div className="space-y-2">
-					<label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{/* Domain Selection Dropdown */}
+				<div className="flex-shrink-0 w-80 ml-4">
+					<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Select Domain
 					</label>
 					{loadingDomains ? (
 						<div className="h-11 flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
 							<p className="text-sm text-gray-500 dark:text-gray-400">
-								Loading domains...
+								Loading...
 							</p>
 						</div>
 					) : !connectedMachine ? (
 						<div className="h-11 flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-							<p className="text-sm text-gray-500 dark:text-gray-400">
-								Please connect to a machine to view domains
+							<p className="text-xs text-gray-500 dark:text-gray-400 px-2 text-center">
+								Connect to a machine
 							</p>
 						</div>
 					) : domains.length === 0 ? (
 						<div className="h-11 flex items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
 							<p className="text-sm text-gray-500 dark:text-gray-400">
-								No domains found
+								No domains
 							</p>
 						</div>
 					) : (
