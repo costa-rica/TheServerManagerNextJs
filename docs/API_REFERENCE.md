@@ -25,6 +25,8 @@ Authorization: Bearer <your_jwt_token>
 - [Machine Routes](#machine-routes)
 - [PM2 Routes](#pm2-routes)
 - [Nginx Routes](#nginx-routes)
+- [Admin Routes](#admin-routes)
+- [Registrar Routes](#registrar-routes)
 
 ---
 
@@ -928,6 +930,7 @@ curl --location 'http://localhost:3000/nginx/scan-nginx-dir' \
 	"errors": 1,
 	"currentMachineIp": "192.168.1.50",
 	"nginxHostMachineId": "507f1f77bcf86cd799439013",
+	"reportPath": "/path/to/resources/status_reports/nginxConfigFileScanStatusSummary_2025-10-26T22-45-30-123Z.csv",
 	"newEntries": [
 		{
 			"fileName": "api.example.com",
@@ -966,7 +969,8 @@ curl --location 'http://localhost:3000/nginx/scan-nginx-dir' \
 - Automatically filters out the 'default' config file
 - Parses each config file to extract server names, port, IP address, and framework
 - Creates database entries only for new configurations (skips duplicates)
-- Returns detailed information about new entries, duplicates, and errors
+- Generates a CSV report saved to `PATH_PROJECT_RESOURCES/status_reports/` with details for each scanned file
+- Returns detailed information about new entries, duplicates, and errors including the path to the generated CSV report
 
 **Error Responses:**
 
@@ -1069,7 +1073,7 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 
 - `templateFileName` must be either `"expressJs"` or `"nextJsPython"`
 - Template files must exist in the templates directory
-- `saveDestination` must be either `'sites-available'` or `'conf.d'`
+- `saveDestination` must be a valid directory path (e.g., `"/etc/nginx/sites-available"`, `"/etc/nginx/conf.d"`, or any custom path)
 - The machine specified by `appHostServerMachineId` must exist and have a `localIpAddress` field
 - Creates both the physical nginx config file and a database record
 
@@ -1143,7 +1147,7 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 
 ```json
 {
-	"error": "saveDestination must be either 'sites-available' or 'conf.d'"
+	"error": "saveDestination must be a non-empty string path"
 }
 ```
 
@@ -1199,6 +1203,84 @@ curl --location 'http://localhost:3000/nginx/create-config-file' \
 
 ---
 
+### DELETE /nginx/:id
+
+Delete a specific nginx configuration file and its database record by ID.
+
+**Authentication:** Required (JWT token)
+
+**URL Parameters:**
+
+- `id` (string, required) - MongoDB ObjectId of the NginxFile document to delete
+
+**Request:**
+
+```http
+DELETE /nginx/68fe4bc1307d3f3731af7c17 HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location --request DELETE 'http://localhost:3000/nginx/68fe4bc1307d3f3731af7c17' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"message": "Nginx configuration deleted successfully",
+	"serverName": "api.example.com",
+	"filePath": "/etc/nginx/sites-available/api.example.com"
+}
+```
+
+**Notes:**
+
+- Deletes both the physical nginx config file AND the database record
+- If the physical file doesn't exist, a warning is logged but deletion continues
+- The database record is always deleted even if file deletion fails
+- Returns the server name and file path of the deleted configuration
+
+**Error Responses:**
+
+**400 Bad Request - Invalid ID:**
+
+```json
+{
+	"error": "Invalid configuration ID"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**404 Not Found - Configuration Not Found:**
+
+```json
+{
+	"error": "Configuration not found"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to delete nginx configuration"
+}
+```
+
+---
+
 ### DELETE /nginx/clear
 
 Clear all nginx configuration file records from the database. This does not delete the actual nginx config files from the filesystem.
@@ -1249,5 +1331,608 @@ curl --location --request DELETE 'http://localhost:3000/nginx/clear' \
 ```json
 {
 	"error": "Failed to clear nginx files"
+}
+```
+
+## Admin Routes
+
+### GET /admin/downloads
+
+List all files available for download in the status_reports directory.
+
+**Authentication:** Required (JWT token)
+
+**Request:**
+
+```http
+GET /admin/downloads HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/admin/downloads' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"directory": "/path/to/resources/status_reports",
+	"fileCount": 3,
+	"files": [
+		{
+			"fileName": "nginxConfigFileScanStatusSummary_2025-10-26T22-45-30-123Z.csv",
+			"size": 15234,
+			"sizeKB": "14.88",
+			"modifiedDate": "2025-10-26T22:45:30.123Z",
+			"isFile": true
+		},
+		{
+			"fileName": "nginxConfigFileScanStatusSummary_2025-10-26T23-12-45-456Z.csv",
+			"size": 18567,
+			"sizeKB": "18.13",
+			"modifiedDate": "2025-10-26T23:12:45.456Z",
+			"isFile": true
+		}
+	]
+}
+```
+
+**Notes:**
+
+- Returns all files from the `PATH_PROJECT_RESOURCES/status_reports/` directory
+- Includes file metadata: name, size in bytes, size in KB, and modification date
+- Only returns actual files (filters out directories)
+
+**Error Responses:**
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**404 Not Found - Directory Not Found:**
+
+```json
+{
+	"error": "Status reports directory not found",
+	"path": "/path/to/resources/status_reports"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to list download files"
+}
+```
+
+---
+
+### GET /admin/downloads/:filename
+
+Download a specific file from the status_reports directory.
+
+**Authentication:** Required (JWT token)
+
+**URL Parameters:**
+
+- `filename` (string, required) - Name of the file to download
+
+**Request:**
+
+```http
+GET /admin/downloads/nginxConfigFileScanStatusSummary_2025-10-26T22-45-30-123Z.csv HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/admin/downloads/nginxConfigFileScanStatusSummary_2025-10-26T22-45-30-123Z.csv' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
+--output report.csv
+```
+
+**Success Response (200 OK):**
+
+The file is streamed as a download with appropriate headers:
+
+- `Content-Disposition: attachment; filename="<filename>"`
+- `Content-Type: application/octet-stream`
+- `Content-Length: <file-size>`
+
+**Notes:**
+
+- Downloads files from the `PATH_PROJECT_RESOURCES/status_reports/` directory
+- Filename is validated to prevent directory traversal attacks
+- File is streamed directly to the client
+- Suitable for downloading CSV reports and other status files
+
+**Error Responses:**
+
+**400 Bad Request - Invalid Filename:**
+
+```json
+{
+	"error": "Invalid filename"
+}
+```
+
+**400 Bad Request - Not a File:**
+
+```json
+{
+	"error": "Not a file"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**404 Not Found - File Not Found:**
+
+```json
+{
+	"error": "File not found"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"error": "Failed to download file"
+}
+```
+
+---
+
+## Registrar Routes
+
+### GET /registrar/get-all-porkbun-domains
+
+Fetch all domains from Porkbun registrar account and return simplified domain information.
+
+**Authentication:** Required (JWT token)
+
+**Request:**
+
+```http
+GET /registrar/get-all-porkbun-domains HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/registrar/get-all-porkbun-domains' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"domainsArray": [
+		{
+			"domain": "dashanddata.com",
+			"status": "ACTIVE"
+		},
+		{
+			"domain": "tu-rincon.com",
+			"status": "ACTIVE"
+		}
+	]
+}
+```
+
+**Notes:**
+
+- Makes an authenticated request to Porkbun API using `PORKBUN_API_KEY` and `PORKBUN_SECRET_KEY` environment variables
+- Returns only domain name and status from the full Porkbun response
+- Porkbun API endpoint: `https://api.porkbun.com/api/json/v3/domain/listAll`
+
+**Error Responses:**
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error - Missing Credentials:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Porkbun API credentials not configured"
+}
+```
+
+**500 Internal Server Error - Porkbun Error:**
+
+```json
+{
+	"errorFrom": "porkbun",
+	"error": "Invalid API credentials"
+}
+```
+
+**500 Internal Server Error - Unexpected Response:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Unexpected response from Porkbun API"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Internal server error"
+}
+```
+
+---
+
+### POST /registrar/create-subdomain
+
+Create a new DNS subdomain record on Porkbun for a specific domain.
+
+**Authentication:** Required (JWT token)
+
+**Request Body:**
+
+```json
+{
+	"domain": "tu-rincon.com",
+	"subdomain": "api",
+	"publicIpAddress": "192.168.1.100",
+	"type": "A"
+}
+```
+
+**Field Descriptions:**
+
+- `domain` (string, required) - The root domain (e.g., "tu-rincon.com")
+- `subdomain` (string, required) - The subdomain name (e.g., "api" for "api.tu-rincon.com")
+- `publicIpAddress` (string, required) - The IP address or target for the DNS record
+- `type` (string, required) - The DNS record type (e.g., "A", "CNAME", "TXT", etc.)
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/registrar/create-subdomain' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
+--data-raw '{
+  "domain": "tu-rincon.com",
+  "subdomain": "api",
+  "publicIpAddress": "192.168.1.100",
+  "type": "A"
+}'
+```
+
+**Success Response (201 Created):**
+
+```json
+{
+	"message": "Subdomain created successfully",
+	"recordId": "12345678",
+	"domain": "tu-rincon.com",
+	"subdomain": "api",
+	"type": "A",
+	"publicIpAddress": "192.168.1.100",
+	"ttl": 600
+}
+```
+
+**Notes:**
+
+- Makes an authenticated request to Porkbun API using `PORKBUN_API_KEY` and `PORKBUN_SECRET_KEY` environment variables
+- TTL is automatically set to 600 seconds (10 minutes)
+- Porkbun API endpoint: `https://api.porkbun.com/api/json/v3/dns/create/{domain}`
+- Common DNS record types: "A" (IPv4), "AAAA" (IPv6), "CNAME" (alias), "TXT" (text), "MX" (mail)
+
+**Error Responses:**
+
+**400 Bad Request - Missing Fields:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Missing domain, subdomain, publicIpAddress, type"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error - Missing Credentials:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Porkbun API credentials not configured"
+}
+```
+
+**500 Internal Server Error - Porkbun Error:**
+
+```json
+{
+	"errorFrom": "porkbun",
+	"error": "Invalid domain or DNS record"
+}
+```
+
+**500 Internal Server Error - Unexpected Response:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Unexpected response from Porkbun API"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Internal server error"
+}
+```
+
+---
+
+### GET /registrar/get-all-porkbun-subdomains/:domain
+
+Retrieve all DNS records (subdomains) for a specific domain from Porkbun.
+
+**Authentication:** Required (JWT token)
+
+**URL Parameters:**
+
+- `domain` (string, required) - The domain name to retrieve DNS records for (e.g., "tu-rincon.com")
+
+**Request:**
+
+```http
+GET /registrar/get-all-porkbun-subdomains/tu-rincon.com HTTP/1.1
+Host: localhost:3000
+Authorization: Bearer <your_jwt_token>
+```
+
+**Request Example:**
+
+```bash
+curl --location 'http://localhost:3000/registrar/get-all-porkbun-subdomains/tu-rincon.com' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"subdomainsArray": [
+		{
+			"name": "api.tu-rincon.com",
+			"type": "A",
+			"content": "69.207.163.8"
+		},
+		{
+			"name": "test.dev.api.tu-rincon.com",
+			"type": "A",
+			"content": "69.207.163.8"
+		},
+		{
+			"name": "tu-rincon.com",
+			"type": "A",
+			"content": "69.207.163.8"
+		},
+		{
+			"name": "tu-rincon.com",
+			"type": "NS",
+			"content": "curitiba.porkbun.com"
+		}
+	]
+}
+```
+
+**Notes:**
+
+- Makes an authenticated request to Porkbun API using `PORKBUN_API_KEY` and `PORKBUN_SECRET_KEY` environment variables
+- Returns only `name`, `type`, and `content` fields from each DNS record
+- Porkbun API endpoint: `https://api.porkbun.com/api/json/v3/dns/retrieve/{domain}`
+- Includes all DNS record types: A, AAAA, CNAME, MX, TXT, NS, etc.
+
+**Error Responses:**
+
+**400 Bad Request - Missing Domain:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Domain parameter is required"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error - Missing Credentials:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Porkbun API credentials not configured"
+}
+```
+
+**500 Internal Server Error - Porkbun Error:**
+
+```json
+{
+	"errorFrom": "porkbun",
+	"error": "Domain is not opted in to API access."
+}
+```
+
+**500 Internal Server Error - Unexpected Response:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Unexpected response from Porkbun API"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Internal server error"
+}
+```
+
+---
+
+### DELETE /registrar/porkbun-subdomain
+
+Delete a specific DNS subdomain record from Porkbun by domain, type, and subdomain name.
+
+**Authentication:** Required (JWT token)
+
+**Request Body:**
+
+```json
+{
+	"domain": "tu-rincon.com",
+	"type": "A",
+	"subdomain": "api"
+}
+```
+
+**Field Descriptions:**
+
+- `domain` (string, required) - The root domain (e.g., "tu-rincon.com")
+- `type` (string, required) - The DNS record type (e.g., "A", "CNAME", "TXT", etc.)
+- `subdomain` (string, required) - The subdomain name (e.g., "api" for "api.tu-rincon.com")
+
+**Request Example:**
+
+```bash
+curl --location --request DELETE 'http://localhost:3000/registrar/porkbun-subdomain' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
+--data-raw '{
+  "domain": "tu-rincon.com",
+  "type": "A",
+  "subdomain": "api"
+}'
+```
+
+**Success Response (200 OK):**
+
+```json
+{
+	"message": "DNS record deleted successfully",
+	"domain": "tu-rincon.com",
+	"type": "A",
+	"subdomain": "api"
+}
+```
+
+**Notes:**
+
+- Makes an authenticated request to Porkbun API using `PORKBUN_API_KEY` and `PORKBUN_SECRET_KEY` environment variables
+- Porkbun API endpoint: `https://api.porkbun.com/api/json/v3/dns/deleteByNameType/{domain}/{type}/{subdomain}`
+- Deletes the DNS record matching the exact domain, type, and subdomain combination
+
+**Error Responses:**
+
+**400 Bad Request - Missing Fields:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Missing domain, type, subdomain"
+}
+```
+
+**401 Unauthorized - Missing or Invalid Token:**
+
+```json
+{
+	"error": "Access denied. No token provided."
+}
+```
+
+**500 Internal Server Error - Missing Credentials:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Porkbun API credentials not configured"
+}
+```
+
+**500 Internal Server Error - Porkbun Error:**
+
+```json
+{
+	"errorFrom": "porkbun",
+	"error": "Record not found or already deleted"
+}
+```
+
+**500 Internal Server Error - Unexpected Response:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Unexpected response from Porkbun API"
+}
+```
+
+**500 Internal Server Error:**
+
+```json
+{
+	"errorFrom": "The404-API",
+	"error": "Internal server error"
 }
 ```

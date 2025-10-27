@@ -83,19 +83,30 @@ export default function TableSubdomains({
 							header: "Delete",
 							enableSorting: false,
 							enableColumnFilter: false,
-							cell: (info: any) => (
-								<button
-									onClick={() =>
-										handleDeleteSubdomain(
-											info.row.original._id,
-											info.row.original.name
-										)
-									}
-									className="px-4 py-2 rounded-lg font-medium transition-colors bg-error-100 hover:bg-error-200 dark:bg-error-900/20 dark:hover:bg-error-900/30 text-error-700 dark:text-error-400"
-								>
-									Delete
-								</button>
-							),
+							cell: (info: any) => {
+								const isNSRecord = info.row.original.type === "NS";
+								return (
+									<button
+										onClick={() => {
+											if (!isNSRecord) {
+												handleDeleteSubdomain(
+													info.row.original._id,
+													info.row.original.name
+												);
+											}
+										}}
+										disabled={isNSRecord}
+										className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+											isNSRecord
+												? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50"
+												: "bg-error-100 hover:bg-error-200 dark:bg-error-900/20 dark:hover:bg-error-900/30 text-error-700 dark:text-error-400 cursor-pointer"
+										}`}
+										title={isNSRecord ? "NS records cannot be deleted" : "Delete this record"}
+									>
+										Delete
+									</button>
+								);
+							},
 						} as ColumnDef<Subdomain>,
 					]
 				: []),
