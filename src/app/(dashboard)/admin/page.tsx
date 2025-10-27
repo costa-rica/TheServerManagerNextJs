@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
-import { setDefaultMachine, clearDefaultMachine } from "@/store/features/machines/machineSlice";
+import { setDefaultMachine, clearDefaultMachine, connectMachine } from "@/store/features/machines/machineSlice";
 import { Machine } from "@/store/features/machines/machineSlice";
 import MachineSelect from "@/components/form/MachineSelect";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
@@ -104,9 +104,10 @@ export default function AdminPage() {
 		}
 
 		dispatch(setDefaultMachine(selectedDefaultMachine));
+		dispatch(connectMachine(selectedDefaultMachine));
 		showInfoModal(
 			"Default Machine Set",
-			`${selectedDefaultMachine.machineName} has been set as the default machine. It will auto-connect when you load the application.`,
+			`${selectedDefaultMachine.machineName} has been set as the default machine and is now connected. It will auto-connect when you load the application.`,
 			"success"
 		);
 	};
