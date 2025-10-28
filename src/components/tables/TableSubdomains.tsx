@@ -40,6 +40,38 @@ export default function TableSubdomains({
 		pageSize: 10,
 	});
 
+	// Custom sorting function for IP addresses
+	const ipAddressSort = (rowA: any, rowB: any, columnId: string) => {
+		const aValue = rowA.getValue(columnId) as string;
+		const bValue = rowB.getValue(columnId) as string;
+
+		// Check if both values are valid IP addresses
+		const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+		const aIsIp = ipRegex.test(aValue);
+		const bIsIp = ipRegex.test(bValue);
+
+		// If both are IPs, compare numerically
+		if (aIsIp && bIsIp) {
+			const aOctets = aValue.split(".").map(Number);
+			const bOctets = bValue.split(".").map(Number);
+
+			// Compare each octet from left to right
+			for (let i = 0; i < 4; i++) {
+				if (aOctets[i] !== bOctets[i]) {
+					return aOctets[i] - bOctets[i];
+				}
+			}
+			return 0;
+		}
+
+		// If only one is an IP, non-IP sorts first
+		if (aIsIp && !bIsIp) return 1;
+		if (!aIsIp && bIsIp) return -1;
+
+		// If neither are IPs, fall back to string comparison
+		return aValue.localeCompare(bValue);
+	};
+
 	const columns = useMemo<ColumnDef<Subdomain>[]>(
 		() => [
 			{
@@ -65,7 +97,8 @@ export default function TableSubdomains({
 			{
 				accessorKey: "content",
 				header: "Content",
-				enableSorting: false,
+				enableSorting: true,
+				sortingFn: ipAddressSort,
 				cell: (info) => (
 					<div className="text-gray-700 dark:text-gray-300 font-mono text-sm">
 						{info.getValue() as string}
