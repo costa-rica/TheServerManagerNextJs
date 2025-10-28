@@ -5,6 +5,9 @@ import type { NextRequest } from "next/server";
 // Define public routes that don't require authentication
 const publicRoutes = ["/login", "/register", "/forgot-password"];
 
+// Define public route patterns that use startsWith matching
+const publicRoutePatterns = ["/forgot-password/reset/"];
+
 // Define API routes that should be excluded from middleware
 const apiRoutes = ["/api"];
 
@@ -16,8 +19,13 @@ export function middleware(request: NextRequest) {
 		return NextResponse.next();
 	}
 
-	// Allow public routes
+	// Allow exact-match public routes
 	if (publicRoutes.includes(pathname)) {
+		return NextResponse.next();
+	}
+
+	// Allow pattern-matched public routes
+	if (publicRoutePatterns.some((pattern) => pathname.startsWith(pattern))) {
 		return NextResponse.next();
 	}
 
