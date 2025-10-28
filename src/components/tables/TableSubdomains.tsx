@@ -10,6 +10,7 @@ import {
 	getPaginationRowModel,
 	SortingState,
 	PaginationState,
+	Row,
 } from "@tanstack/react-table";
 
 export interface Subdomain {
@@ -41,7 +42,11 @@ export default function TableSubdomains({
 	});
 
 	// Custom sorting function for IP addresses
-	const ipAddressSort = (rowA: any, rowB: any, columnId: string) => {
+	const ipAddressSort = (
+		rowA: Row<Subdomain>,
+		rowB: Row<Subdomain>,
+		columnId: string
+	) => {
 		const aValue = rowA.getValue(columnId) as string;
 		const bValue = rowB.getValue(columnId) as string;
 

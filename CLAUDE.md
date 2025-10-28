@@ -243,6 +243,17 @@ Path alias: `@/*` → `./src/*`
 
 Example: `import { AppHeader } from "@/layout/AppHeader"`
 
+**IMPORTANT: Strict Typing Requirements**
+
+This project enforces strict ESLint rules that **prohibit the use of `any` type**. All code must be properly typed:
+
+- Use explicit types for all function parameters and return values
+- Import proper types from libraries (e.g., `Row<T>` from `@tanstack/react-table`)
+- Avoid `any` type — use specific types, generics, or `unknown` when appropriate
+- The build will fail if ESLint detects `any` types in the code
+
+When adding new code, always ensure proper TypeScript typing to pass `npm run build`.
+
 ### Styling with Tailwind
 
 - Tailwind CSS v4 via `@tailwindcss/postcss`

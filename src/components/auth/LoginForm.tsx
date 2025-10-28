@@ -15,7 +15,9 @@ export default function LoginForm() {
 		process.env.NEXT_PUBLIC_MODE === "workstation" ? "nrodrig1@gmail.com" : ""
 	);
 	const [password, passwordSetter] = useState(
-		process.env.NEXT_PUBLIC_MODE === "workstation" ? "test" : ""
+		process.env.NEXT_PUBLIC_MODE === "workstation"
+			? process.env.NEXT_PUBLIC_LOGIN_PASSWORD
+			: ""
 	);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
 	const [infoModalData, setInfoModalData] = useState<{
