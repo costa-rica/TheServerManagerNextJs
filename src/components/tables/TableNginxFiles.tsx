@@ -26,7 +26,7 @@ interface NginxFile {
 		createdAt: string;
 		updatedAt: string;
 		__v: number;
-	};
+	} | null;
 	nginxHostServerMachineId: {
 		_id: string;
 		machineName: string;
@@ -37,7 +37,7 @@ interface NginxFile {
 		createdAt: string;
 		updatedAt: string;
 		__v: number;
-	};
+	} | null;
 	framework: string;
 	storeDirectory: string;
 	createdAt: string;
@@ -48,6 +48,7 @@ interface NginxFile {
 interface TableNginxFilesProps {
 	data: NginxFile[];
 	handleDeleteConfig: (configId: string, serverName: string) => void;
+	onNullMachineIdsDetected?: (configs: Array<{ serverName: string; portNumber: number; nullFields: string[] }>) => void;
 }
 
 // Custom filter function for searching nginx configs
@@ -57,7 +58,7 @@ const nginxFilterFn: FilterFn<NginxFile> = (row, columnId, filterValue) => {
 
 	return (
 		config.serverName?.toLowerCase().includes(searchValue) ||
-		config.appHostServerMachineId.localIpAddress
+		config.appHostServerMachineId?.localIpAddress
 			?.toLowerCase()
 			.includes(searchValue) ||
 		config.framework?.toLowerCase().includes(searchValue) ||
@@ -71,11 +72,45 @@ const nginxFilterFn: FilterFn<NginxFile> = (row, columnId, filterValue) => {
 export default function TableNginxFiles({
 	data,
 	handleDeleteConfig,
+	onNullMachineIdsDetected,
 }: TableNginxFilesProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [expandedStoreDir, setExpandedStoreDir] = useState<Set<string>>(new Set());
 	const [expandedNginxHost, setExpandedNginxHost] = useState<Set<string>>(new Set());
+	const [hasCheckedForNulls, setHasCheckedForNulls] = useState(false);
+
+	// Check for null machine IDs when data changes (only once per data load)
+	React.useEffect(() => {
+		if (!onNullMachineIdsDetected || data.length === 0 || hasCheckedForNulls) return;
+
+		const configsWithNulls: Array<{ serverName: string; portNumber: number; nullFields: string[] }> = [];
+
+		data.forEach((config) => {
+			const nullFields: string[] = [];
+			if (config.appHostServerMachineId === null) {
+				nullFields.push('appHostServerMachineId');
+			}
+			if (config.nginxHostServerMachineId === null) {
+				nullFields.push('nginxHostServerMachineId');
+			}
+
+			if (nullFields.length > 0) {
+				configsWithNulls.push({
+					serverName: config.serverName,
+					portNumber: config.portNumber,
+					nullFields,
+				});
+			}
+		});
+
+		if (configsWithNulls.length > 0) {
+			onNullMachineIdsDetected(configsWithNulls);
+			setHasCheckedForNulls(true);
+		} else {
+			setHasCheckedForNulls(true);
+		}
+	}, [data, onNullMachineIdsDetected, hasCheckedForNulls]);
 
 	const toggleStoreDir = (id: string) => {
 		setExpandedStoreDir((prev) => {
@@ -179,18 +214,26 @@ export default function TableNginxFiles({
 								</button>
 								{isNginxHostExpanded && (
 									<div className="ml-2 space-y-1">
-										<div className="text-sm text-gray-700 dark:text-gray-300">
-											<span className="font-medium">Machine:</span>{" "}
-											<span className="font-mono text-xs">
-												{config.nginxHostServerMachineId.machineName}
-											</span>
-										</div>
-										<div className="text-sm text-gray-700 dark:text-gray-300">
-											<span className="font-medium">IP:</span>{" "}
-											<span className="font-mono">
-												{config.nginxHostServerMachineId.localIpAddress}
-											</span>
-										</div>
+										{config.nginxHostServerMachineId ? (
+											<>
+												<div className="text-sm text-gray-700 dark:text-gray-300">
+													<span className="font-medium">Machine:</span>{" "}
+													<span className="font-mono text-xs">
+														{config.nginxHostServerMachineId.machineName}
+													</span>
+												</div>
+												<div className="text-sm text-gray-700 dark:text-gray-300">
+													<span className="font-medium">IP:</span>{" "}
+													<span className="font-mono">
+														{config.nginxHostServerMachineId.localIpAddress}
+													</span>
+												</div>
+											</>
+										) : (
+											<div className="text-sm text-error-600 dark:text-error-400">
+												Machine information not available (null)
+											</div>
+										)}
 									</div>
 								)}
 							</div>
@@ -207,12 +250,20 @@ export default function TableNginxFiles({
 					const config = info.row.original;
 					return (
 						<div className="space-y-1">
-							<div className="font-medium text-gray-900 dark:text-white">
-								{config.appHostServerMachineId.machineName}
-							</div>
-							<div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-								{config.appHostServerMachineId.localIpAddress}
-							</div>
+							{config.appHostServerMachineId ? (
+								<>
+									<div className="font-medium text-gray-900 dark:text-white">
+										{config.appHostServerMachineId.machineName}
+									</div>
+									<div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
+										{config.appHostServerMachineId.localIpAddress}
+									</div>
+								</>
+							) : (
+								<div className="font-medium text-error-600 dark:text-error-400">
+									Not Available (null)
+								</div>
+							)}
 						</div>
 					);
 				},

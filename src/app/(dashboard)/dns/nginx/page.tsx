@@ -23,7 +23,7 @@ interface NginxFile {
 		createdAt: string;
 		updatedAt: string;
 		__v: number;
-	};
+	} | null;
 	nginxHostServerMachineId: {
 		_id: string;
 		machineName: string;
@@ -34,7 +34,7 @@ interface NginxFile {
 		createdAt: string;
 		updatedAt: string;
 		__v: number;
-	};
+	} | null;
 	framework: string;
 	storeDirectory: string;
 	createdAt: string;
@@ -82,6 +82,8 @@ export default function NginxPage() {
 		variant: "info",
 	});
 	const [isScanning, setIsScanning] = useState(false);
+	const [nullMachineIdsModalOpen, setNullMachineIdsModalOpen] = useState(false);
+	const [nullMachineIdsData, setNullMachineIdsData] = useState<Array<{ serverName: string; portNumber: number; nullFields: string[] }>>([]);
 
 	const token = useAppSelector((state) => state.user.token);
 	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
@@ -449,6 +451,11 @@ export default function NginxPage() {
 		}
 	};
 
+	const handleNullMachineIdsDetected = (configs: Array<{ serverName: string; portNumber: number; nullFields: string[] }>) => {
+		setNullMachineIdsData(configs);
+		setNullMachineIdsModalOpen(true);
+	};
+
 	const handleScanNginxConfig = async () => {
 		if (!connectedMachine) {
 			showInfoModal(
@@ -758,6 +765,7 @@ export default function NginxPage() {
 					<TableNginxFiles
 						data={nginxFiles}
 						handleDeleteConfig={handleDeleteConfigClick}
+						onNullMachineIdsDetected={handleNullMachineIdsDetected}
 					/>
 				)}
 			</div>
@@ -807,6 +815,22 @@ export default function NginxPage() {
 					message={infoModalData.message}
 					variant={infoModalData.variant}
 					onClose={() => setInfoModalOpen(false)}
+				/>
+			</Modal>
+
+			{/* Null Machine IDs Detection Modal */}
+			<Modal isOpen={nullMachineIdsModalOpen} onClose={() => setNullMachineIdsModalOpen(false)}>
+				<ModalInformationOk
+					title="Null Machine IDs Detected"
+					message={
+						`The following nginx configurations have null machine ID references:\n\n` +
+						nullMachineIdsData.map((config, idx) =>
+							`${idx + 1}. Server: "${config.serverName}", Port: ${config.portNumber}\n   Null fields: ${config.nullFields.join(', ')}`
+						).join('\n\n')
+					}
+					variant="error"
+					scrollable={true}
+					onClose={() => setNullMachineIdsModalOpen(false)}
 				/>
 			</Modal>
 		</div>

@@ -8,6 +8,7 @@ interface ModalInformationOkProps {
 	onClose: () => void;
 	okButtonText?: string;
 	variant?: "info" | "success" | "error" | "warning";
+	scrollable?: boolean;
 }
 
 export const ModalInformationOk: React.FC<ModalInformationOkProps> = ({
@@ -17,6 +18,7 @@ export const ModalInformationOk: React.FC<ModalInformationOkProps> = ({
 	onClose,
 	okButtonText = "OK",
 	variant = "info",
+	scrollable = false,
 }) => {
 	const handleOk = () => {
 		if (onOk) {
@@ -63,7 +65,9 @@ export const ModalInformationOk: React.FC<ModalInformationOkProps> = ({
 			{/* Message */}
 			<div className="mb-8">
 				<div
-					className={`p-4 rounded-lg border ${styles.border} ${styles.bg}`}
+					className={`p-4 rounded-lg border ${styles.border} ${styles.bg} ${
+						scrollable ? "max-h-[50vh] overflow-y-auto" : ""
+					}`}
 				>
 					<p className={`text-base whitespace-pre-line ${styles.text}`}>{message}</p>
 				</div>
