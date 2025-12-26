@@ -10,7 +10,7 @@ This Next.js web portal provides real-time visibility and management features fo
 
 - View live PM2 process logs from any connected machine.
 - Check the status of apps running under PM2.
-- Manage DNS entries via the GoDaddy API to add or modify Type A subdomains.
+- Manage DNS entries via the Porkbuns API to add or modify Type A subdomains.
 - Automatically generate and register Nginx configurations for new subdomains.
 - View and manage existing Nginx configuration files from each server’s `/etc/nginx/sites-available/` and `conf.d` directories.
 

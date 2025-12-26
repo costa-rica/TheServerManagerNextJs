@@ -8,15 +8,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The dashboard provides real-time visibility for:
 
-- PM2 process logs from any connected machine
-- App status for processes running under PM2
-- DNS management via GoDaddy API (Type A subdomains)
+- (To be replaced by services page, no longer using PM2)PM2 process logs from any connected machine
+- (To be replaced by services page, no longer using PM2)App status for processes running under PM2
+- DNS management via Porkbuns API (Type A subdomains)
 - Automatic Nginx configuration generation and management
 - Server configuration file viewing and management
 
 **Architecture Stack:**
 
-- Frontend: Next.js 15 (App Router) + TypeScript
+- Frontend: Next.js 16 (App Router) + TypeScript
 - Styling: Tailwind CSS v4
 - State Management: Redux Toolkit with persistence
 - Backend Integration: Connects to the404back instances on each Ubuntu server
@@ -38,8 +38,6 @@ npm start
 # Run ESLint
 npm run lint
 ```
-
-**IMPORTANT:** Do NOT use Turbopack (`--turbo` flag) — it breaks SVG icon loading from `src/icons/`.
 
 ## Core Architecture Patterns
 
@@ -176,7 +174,6 @@ Icons in `src/icons/` transformed to React components via `@svgr/webpack`:
 
 - Webpack config in `next.config.ts` handles `.svg` imports
 - Import: `import { HouseIcon, LogoutIcon } from "@/icons"`
-- **Critical:** Never use Turbopack — breaks icon loading
 
 ### Sidebar Navigation
 
@@ -228,7 +225,7 @@ src/components/
 ├── form/              # Form inputs, selects, switches, labels, etc.
 ├── ui/                # Reusable primitives (button, modal, dropdown, alert, badge, table)
 ├── common/            # Shared components (breadcrumbs, theme toggle, chart tabs)
-└── tables/            # Specialized table components (DELETED in current state)
+└── tables/            # Specialized table components
 
 src/layout/            # Top-level layout components
 ├── AppHeader.tsx      # Top navigation bar
@@ -374,7 +371,6 @@ const response = await fetch(
 This project originated from `create-next-app@latest` and was customized from the TailAdmin template architecture. Key customizations:
 
 - Sidebar moved to RIGHT side
-- Route groups replace v08 TemplateView pattern
 - Component renaming: `SignInForm` → `LoginForm`, `SignUpForm` → `RegistrationForm`
 - Redux persistence configured for user authentication state
 - Custom SVG icon webpack loader
