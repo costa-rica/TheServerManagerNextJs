@@ -4,16 +4,19 @@ import TableMachines from "@/components/tables/TableMachines";
 import { mockMachinesData } from "@/data/mockMachines";
 import { Modal } from "@/components/ui/modal";
 import { ModalAddMachine } from "@/components/ui/modal/ModalAddMachine";
+import { ModalMachineEdit } from "@/components/ui/modal/ModalMachineEdit";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
-import { Machine } from "@/types/machine";
+import { Machine, ServiceConfig } from "@/types/machine";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setMachinesArray } from "@/store/features/machines/machineSlice";
 
 export default function MachinesPage() {
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const [editModalOpen, setEditModalOpen] = useState(false);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 	const [infoModalOpen, setInfoModalOpen] = useState(false);
+	const [machineToEdit, setMachineToEdit] = useState<Machine | null>(null);
 	const [infoModalData, setInfoModalData] = useState<{
 		title: string;
 		message: string;
@@ -206,6 +209,72 @@ export default function MachinesPage() {
 		}
 	};
 
+	const handleEditMachineClick = (machine: Machine) => {
+		setMachineToEdit(machine);
+		setEditModalOpen(true);
+	};
+
+	const handleEditMachineSubmit = async (
+		publicId: string,
+		updateData: {
+			urlFor404Api: string;
+			nginxStoragePathOptions: string[];
+			servicesArray: ServiceConfig[];
+		}
+	) => {
+		console.log("Updating machine:", publicId, updateData);
+
+		const response = await fetch(
+			`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines/${publicId}`,
+			{
+				method: "PATCH",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: `Bearer ${token}`,
+				},
+				body: JSON.stringify(updateData),
+			}
+		);
+
+		console.log("Received response:", response.status);
+
+		let resJson = null;
+		const contentType = response.headers.get("Content-Type");
+
+		if (contentType?.includes("application/json")) {
+			resJson = await response.json();
+		}
+
+		if (response.ok) {
+			console.log("Machine updated successfully:", resJson);
+			setEditModalOpen(false);
+			setMachineToEdit(null);
+
+			try {
+				// Refetch machines to get updated data
+				await fetchMachines();
+				showInfoModal(
+					"Machine Updated",
+					`Successfully updated machine configuration`,
+					"success"
+				);
+			} catch (error) {
+				console.error("Error refetching machines:", error);
+				showInfoModal(
+					"Warning",
+					"Machine updated but failed to refresh list. Please refresh the page.",
+					"warning"
+				);
+			}
+		} else {
+			const errorMessage =
+				resJson?.error || `There was a server error: ${response.status}`;
+			setEditModalOpen(false);
+			setMachineToEdit(null);
+			showInfoModal("Error", errorMessage, "error");
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
@@ -247,6 +316,7 @@ export default function MachinesPage() {
 				<TableMachines
 					data={machines}
 					handleDeleteMachine={handleDeleteMachineClick}
+					handleEditMachine={handleEditMachineClick}
 				/>
 			)}
 
@@ -279,6 +349,26 @@ export default function MachinesPage() {
 					yesButtonStyle="danger"
 				/>
 			</Modal>
+
+			{/* Edit Machine Modal */}
+			{machineToEdit && (
+				<Modal
+					isOpen={editModalOpen}
+					onClose={() => {
+						setEditModalOpen(false);
+						setMachineToEdit(null);
+					}}
+				>
+					<ModalMachineEdit
+						machine={machineToEdit}
+						onClose={() => {
+							setEditModalOpen(false);
+							setMachineToEdit(null);
+						}}
+						onSubmit={handleEditMachineSubmit}
+					/>
+				</Modal>
+			)}
 
 			{/* Information Modal */}
 			<Modal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)}>

@@ -17,6 +17,7 @@ import { connectMachine } from "@/store/features/machines/machineSlice";
 interface TableMachinesProps {
 	data: Machine[];
 	handleDeleteMachine: (machineId: string, machineName: string) => void;
+	handleEditMachine: (machine: Machine) => void;
 }
 
 // Custom filter function for searching Machine column (machineName, url, ip)
@@ -34,6 +35,7 @@ const machineFilterFn: FilterFn<Machine> = (row, columnId, filterValue) => {
 export default function TableMachines({
 	data,
 	handleDeleteMachine,
+	handleEditMachine,
 }: TableMachinesProps) {
 	const dispatch = useAppDispatch();
 	const connectedMachineName = useAppSelector(
@@ -84,17 +86,25 @@ export default function TableMachines({
 					const isConnected =
 						info.row.original.machineName === connectedMachineName;
 					return (
-						<button
-							onClick={() => handleConnect(info.row.original)}
-							disabled={isConnected}
-							className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-								isConnected
-									? "bg-success-500 text-white cursor-default"
-									: "bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white"
-							}`}
-						>
-							{isConnected ? "Connected" : "Connect Machine"}
-						</button>
+						<div className="flex flex-col gap-2">
+							<button
+								onClick={() => handleConnect(info.row.original)}
+								disabled={isConnected}
+								className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+									isConnected
+										? "bg-success-500 text-white cursor-default"
+										: "bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white"
+								}`}
+							>
+								{isConnected ? "Connected" : "Connect Machine"}
+							</button>
+							<button
+								onClick={() => handleEditMachine(info.row.original)}
+								className="px-4 py-2 rounded-lg font-medium transition-colors bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+							>
+								Edit Machine
+							</button>
+						</div>
 					);
 				},
 			},
@@ -121,7 +131,7 @@ export default function TableMachines({
 				},
 			},
 		],
-		[connectedMachineName, handleDeleteMachine, handleConnect]
+		[connectedMachineName, handleDeleteMachine, handleConnect, handleEditMachine]
 	);
 
 	const table = useReactTable({
