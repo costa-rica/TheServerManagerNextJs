@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**The 404 Web** is the primary user-facing dashboard for The 404 Server Manager ecosystem — a comprehensive suite for monitoring, managing, and orchestrating servers and their applications. This Next.js web portal connects to various APIs deployed on each machine, all secured by shared authentication and a unified MongoDB instance.
+**The Server Manager NextJs** is the primary user-facing dashboard for The Server Manager ecosystem — a comprehensive suite for monitoring, managing, and orchestrating servers and their applications. This Next.js web portal connects to various APIs deployed on each machine, all secured by shared authentication and a unified MongoDB instance.
 
 The dashboard provides real-time visibility for:
 
@@ -69,9 +69,9 @@ Redux store configuration in `src/store/index.ts`:
 // Store setup with persistence
 const rootReducer = combineReducers({ user });
 const persistConfig = {
-	key: "root",
-	storage,
-	whitelist: ["user"], // Only persist user slice
+  key: "root",
+  storage,
+  whitelist: ["user"], // Only persist user slice
 };
 ```
 
@@ -151,13 +151,13 @@ All non-auth API calls continue to use direct fetch to backend:
 
 ```typescript
 const response = await fetch(
-	`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/endpoint`,
-	{
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${token}`,
-		},
-	}
+  `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/endpoint`,
+  {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  }
 );
 ```
 
@@ -185,24 +185,24 @@ Sidebar menu defined in `src/layout/AppSidebar.tsx`:
 ```typescript
 // Main navigation items
 const navItems: NavItem[] = [
-	{
-		icon: <HouseIcon />,
-		name: "Home",
-		subItems: [{ name: "Home page", path: "/home" }],
-	},
-	// ...
+  {
+    icon: <HouseIcon />,
+    name: "Home",
+    subItems: [{ name: "Home page", path: "/home" }],
+  },
+  // ...
 ];
 
 // Admin/other items
 const othersItems: NavItem[] = [
-	{
-		icon: <DatabaseIcon />,
-		name: "Database",
-		subItems: [
-			{ name: "Backup", path: "/admin-database/backup" },
-			// ...
-		],
-	},
+  {
+    icon: <DatabaseIcon />,
+    name: "Database",
+    subItems: [
+      { name: "Backup", path: "/admin-database/backup" },
+      // ...
+    ],
+  },
 ];
 ```
 
@@ -273,12 +273,12 @@ const { isDarkMode, toggleTheme } = useTheme();
 // Sidebar state
 import { useSidebar } from "@/context/SidebarContext";
 const { isExpanded, isMobileOpen, toggleSidebar, toggleMobileSidebar } =
-	useSidebar();
+  useSidebar();
 ```
 
 ## Styling Guide
 
-The 404 Web uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments.
+The Server Manager NextJs uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments.
 
 ### Color Palette
 
@@ -301,7 +301,7 @@ All colors follow a standardized 10-step scale (25-950) defined in `src/app/glob
 
 ### Logo
 
-The 404 Web uses a **text-based terminal prompt** as its logo (not an image):
+The Server Manager NextJs uses a **text-based terminal prompt** as its logo (not an image):
 
 ```
 $ the-404> _
@@ -336,10 +336,10 @@ NEXT_PUBLIC_MODE=workstation  # Prefills login form
 
 **Solution**: Use different URLs based on execution context:
 
-| Context | Variable | Example | Used By |
-|---------|----------|---------|---------|
-| **Server-side** | `NEXT_PUBLIC_INTERNAL_API_BASE_URL` | `http://localhost:8002` | `/api/auth/login`, `/api/auth/logout` |
-| **Client-side** | `NEXT_PUBLIC_EXTERNAL_API_BASE_URL` | `https://dev.nws-the404...` | Component fetch calls |
+| Context         | Variable                            | Example                     | Used By                               |
+| --------------- | ----------------------------------- | --------------------------- | ------------------------------------- |
+| **Server-side** | `NEXT_PUBLIC_INTERNAL_API_BASE_URL` | `http://localhost:8002`     | `/api/auth/login`, `/api/auth/logout` |
+| **Client-side** | `NEXT_PUBLIC_EXTERNAL_API_BASE_URL` | `https://dev.nws-the404...` | Component fetch calls                 |
 
 ### API Call Patterns
 
@@ -348,12 +348,12 @@ NEXT_PUBLIC_MODE=workstation  # Prefills login form
 ```typescript
 // src/app/api/auth/login/route.ts
 const response = await fetch(
-	`${process.env.NEXT_PUBLIC_INTERNAL_API_BASE_URL}/users/login`,
-	{
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ email, password }),
-	}
+  `${process.env.NEXT_PUBLIC_INTERNAL_API_BASE_URL}/users/login`,
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  }
 );
 ```
 
@@ -362,10 +362,10 @@ const response = await fetch(
 ```typescript
 // src/app/(dashboard)/servers/machines/page.tsx
 const response = await fetch(
-	`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines`,
-	{
-		headers: { Authorization: `Bearer ${token}` },
-	}
+  `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  }
 );
 ```
 

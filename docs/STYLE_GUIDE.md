@@ -1,10 +1,10 @@
 # Style Guide
 
-This document defines the visual design system for The 404 Web dashboard, including colors, typography, logo implementation, and component styling guidelines.
+This document defines the visual design system for The Server Manager NextJs dashboard, including colors, typography, logo implementation, and component styling guidelines.
 
 ## Visual Aesthetic
 
-The 404 Web uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments. This aesthetic reinforces the application's purpose as a technical server management tool.
+The Server Manager NextJs uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments. This aesthetic reinforces the application's purpose as a technical server management tool.
 
 ## Color Palette
 
@@ -241,7 +241,7 @@ The font is loaded via Google Fonts in `src/app/layout.tsx` and applied globally
 
 **IMPLEMENTATION STATUS:** Fully implemented
 
-**IMPORTANT:** The 404 Web uses a **text-based terminal prompt** as its logo, not an image file. This reinforces the terminal aesthetic and ensures crisp rendering at all sizes.
+**IMPORTANT:** The Server Manager NextJs uses a **text-based terminal prompt** as its logo, not an image file. This reinforces the terminal aesthetic and ensures crisp rendering at all sizes.
 
 ### Logo Format
 
@@ -264,9 +264,9 @@ Use this code pattern for all logo implementations:
 
 ```tsx
 <h1 className="text-5xl sm:text-6xl md:text-7xl font-mono tracking-wide">
-	<span className="text-gray-900 dark:text-white">$ the-</span>
-	<span className="text-brand-500">404</span>
-	<span className="text-gray-900 dark:text-white">&gt; _</span>
+  <span className="text-gray-900 dark:text-white">$ the-</span>
+  <span className="text-brand-500">404</span>
+  <span className="text-gray-900 dark:text-white">&gt; _</span>
 </h1>
 ```
 

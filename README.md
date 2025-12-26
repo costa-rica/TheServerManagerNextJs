@@ -1,10 +1,10 @@
-# The 404 Web
+# The Server Manager NextJs
 
 ## Overview
 
 ### Purpose
 
-The 404 Web is the primary user-facing dashboard of **The 404 Server Manager** ecosystem — a comprehensive suite of applications designed to help monitor, manage, and orchestrate servers and their applications across your infrastructure. It connects to various APIs deployed on each machine, all secured by a shared authentication layer and unified MongoDB instance.
+The Server Manager NextJs is the primary user-facing dashboard of **The Server Manager** ecosystem — a comprehensive suite of applications designed to help monitor, manage, and orchestrate servers and their applications across your infrastructure. It connects to various APIs deployed on each machine, all secured by a shared authentication layer and unified MongoDB instance.
 
 This Next.js web portal provides real-time visibility and management features for your servers. Through its interface, users can:
 
@@ -14,7 +14,7 @@ This Next.js web portal provides real-time visibility and management features fo
 - Automatically generate and register Nginx configurations for new subdomains.
 - View and manage existing Nginx configuration files from each server’s `/etc/nginx/sites-available/` and `conf.d` directories.
 
-The dashboard unifies multiple APIs, each hosted on a separate Ubuntu server, and communicates securely with the shared MongoDB database that stores machine data and network configurations. By switching between connected machines, The 404 Web dynamically updates its data context to display logs, apps, and configurations for the selected server.
+The dashboard unifies multiple APIs, each hosted on a separate Ubuntu server, and communicates securely with the shared MongoDB database that stores machine data and network configurations. By switching between connected machines, The Server Manager NextJs dynamically updates its data context to display logs, apps, and configurations for the selected server.
 
 ### Architecture Summary
 
@@ -30,7 +30,7 @@ The dashboard unifies multiple APIs, each hosted on a separate Ubuntu server, an
 
 ## Styling Guide
 
-The 404 Web uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments.
+The Server Manager NextJs uses a **terminal-inspired design language** — minimalist, functional, with high contrast and readability that evokes classic CRT terminal environments.
 
 ### Color Palette
 
@@ -59,7 +59,7 @@ All colors follow a standardized 10-step scale (25-950) defined in `src/app/glob
 
 ### Template Origin
 
-This project originated from a Next.js admin dashboard template and was customized to fit the structure and goals of **The 404 Server Manager**. The following references describe its starting point and base setup:
+This project originated from a Next.js admin dashboard template and was customized to fit the structure and goals of **The Server Manager**. The following references describe its starting point and base setup:
 
 - Started from `npx create-next-app@latest`
   - No Turbopack → causes issues with SVG icons (`src/icons`)
