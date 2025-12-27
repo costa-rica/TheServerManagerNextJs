@@ -16,6 +16,7 @@ import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
 interface TableMachineServicesProps {
 	data: Service[];
+	handleViewLogs: (serviceName: string) => void;
 }
 
 // Custom filter function for searching services by name
@@ -54,6 +55,7 @@ const extractTimeLeft = (timerTrigger: string | undefined): string => {
 
 export default function TableMachineServices({
 	data,
+	handleViewLogs,
 }: TableMachineServicesProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
@@ -74,9 +76,12 @@ export default function TableMachineServices({
 				enableColumnFilter: false,
 				cell: (info) => (
 					<div>
-						<div className="font-medium text-gray-900 dark:text-white">
+						<button
+							onClick={() => handleViewLogs(info.getValue() as string)}
+							className="font-medium text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-500 transition-colors cursor-pointer text-left"
+						>
 							{info.getValue() as string}
-						</div>
+						</button>
 						<div className="text-sm text-gray-500 dark:text-gray-400">
 							{info.row.original.filename}
 						</div>
@@ -134,7 +139,7 @@ export default function TableMachineServices({
 				},
 			},
 		],
-		[]
+		[handleViewLogs]
 	);
 
 	const table = useReactTable({

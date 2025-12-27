@@ -3,11 +3,15 @@ import React, { useState, useEffect, useCallback } from "react";
 import TableMachineServices from "@/components/tables/TableMachineServices";
 import { Service, ServicesResponse } from "@/types/service";
 import { useAppSelector } from "@/store/hooks";
+import { Modal } from "@/components/ui/modal";
+import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
 
 export default function ServicesPage() {
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+	const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
 	const token = useAppSelector((state) => state.user.token);
 
 	const fetchServices = useCallback(async () => {
@@ -53,6 +57,11 @@ export default function ServicesPage() {
 		fetchServices();
 	}, [fetchServices]);
 
+	const handleViewLogs = (serviceName: string) => {
+		setSelectedServiceName(serviceName);
+		setIsLogModalOpen(true);
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
@@ -84,7 +93,33 @@ export default function ServicesPage() {
 			)}
 
 			{/* Services Table */}
-			{!loading && !error && <TableMachineServices data={services} />}
+			{!loading && !error && (
+				<TableMachineServices
+					data={services}
+					handleViewLogs={handleViewLogs}
+				/>
+			)}
+
+			{/* Service Log Modal */}
+			{selectedServiceName && (
+				<Modal
+					isOpen={isLogModalOpen}
+					onClose={() => {
+						setIsLogModalOpen(false);
+						setSelectedServiceName(null);
+					}}
+					isFullscreen={true}
+					showCloseButton={true}
+				>
+					<ModalServiceLog
+						serviceName={selectedServiceName}
+						onClose={() => {
+							setIsLogModalOpen(false);
+							setSelectedServiceName(null);
+						}}
+					/>
+				</Modal>
+			)}
 		</div>
 	);
 }
