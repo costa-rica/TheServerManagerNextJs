@@ -2,6 +2,9 @@
 import React, { useState } from "react";
 import { Machine, ServiceConfig } from "@/types/machine";
 import { ChevronDownIcon } from "@/icons";
+import { useAppSelector } from "@/store/hooks";
+import { Modal } from "@/components/ui/modal";
+import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
 interface ModalMachineEditProps {
 	machine: Machine;
@@ -43,6 +46,15 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 			? machine.servicesArray.map(() => false) // Existing services collapsed by default
 			: [true] // New empty service expanded by default
 	);
+	const [isCheckingServices, setIsCheckingServices] = useState(false);
+	const [showErrorModal, setShowErrorModal] = useState(false);
+	const [errorModal, setErrorModal] = useState({ title: "", message: "" });
+
+	// Get connected machine and token from Redux
+	const connectedMachine = useAppSelector(
+		(state) => state.machine.connectedMachine
+	);
+	const token = useAppSelector((state) => state.user.token);
 
 	const handleAddNginxPath = () => {
 		setNginxPaths([...nginxPaths, ""]);
@@ -96,6 +108,82 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 				value === "" ? undefined : (value as string);
 		}
 		setServices(newServices);
+	};
+
+	const checkServiceFiles = async () => {
+		if (!connectedMachine || !token) {
+			setErrorModal({
+				title: "Error",
+				message:
+					"No machine connected or authentication token missing. Please connect to a machine first.",
+			});
+			setShowErrorModal(true);
+			return;
+		}
+
+		setIsCheckingServices(true);
+
+		try {
+			const response = await fetch(
+				`${connectedMachine.urlFor404Api}/machines/check-nick-systemctl`,
+				{
+					method: "GET",
+					headers: {
+						Authorization: `Bearer ${token}`,
+						"Content-Type": "application/json",
+					},
+				}
+			);
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				// Handle error response
+				let errorTitle = "Error";
+				let errorMessage = "An error occurred while checking service files.";
+
+				if (data.error) {
+					if (typeof data.error === "string") {
+						errorMessage = data.error;
+					} else if (data.error.code && data.error.message) {
+						errorTitle = data.error.code.replace(/_/g, " ");
+						errorMessage = data.error.message;
+						if (data.error.details) {
+							errorMessage += `\n\n${data.error.details}`;
+						}
+					}
+				}
+
+				setErrorModal({ title: errorTitle, message: errorMessage });
+				setShowErrorModal(true);
+				return;
+			}
+
+			// Success - replace all existing services with the returned ones
+			if (data.servicesArray && Array.isArray(data.servicesArray)) {
+				const newServices: ServiceConfig[] = data.servicesArray.map(
+					(service: { filename: string; port?: number; filenameTimer?: string }) => ({
+						name: "", // Will be auto-populated by backend
+						filename: service.filename,
+						pathToLogs: "/home/nick/logs/",
+						filenameTimer: service.filenameTimer || "",
+						port: service.port || undefined,
+					})
+				);
+
+				setServices(newServices);
+				// First service expanded, rest collapsed
+				setExpandedServices(newServices.map((_, index) => index === 0));
+			}
+		} catch (error) {
+			setErrorModal({
+				title: "Network Error",
+				message: `Failed to connect to the server: ${error instanceof Error ? error.message : "Unknown error"}`,
+			});
+			setShowErrorModal(true);
+		} finally {
+			setIsCheckingServices(false);
+		}
 	};
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -216,6 +304,17 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 					<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Services
 					</label>
+
+					{/* Check Service Files Button */}
+					<button
+						type="button"
+						onClick={checkServiceFiles}
+						disabled={isCheckingServices}
+						className="mb-4 px-4 py-2 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{isCheckingServices ? "checking..." : "check .service files"}
+					</button>
+
 					<div className="space-y-4">
 						{services.map((service, index) => (
 							<div
@@ -351,6 +450,17 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 					</button>
 				</div>
 			</form>
+
+			{/* Error Modal */}
+			<Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)}>
+				<ModalInformationOk
+					title={errorModal.title}
+					message={errorModal.message}
+					onClose={() => setShowErrorModal(false)}
+					variant="error"
+					scrollable={true}
+				/>
+			</Modal>
 		</div>
 	);
 };
