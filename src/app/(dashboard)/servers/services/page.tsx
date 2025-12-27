@@ -62,6 +62,44 @@ export default function ServicesPage() {
 		setIsLogModalOpen(true);
 	};
 
+	const handleToggleStatus = async (
+		serviceFilename: string,
+		toggleStatus: string,
+		serviceName: string
+	) => {
+		try {
+			const response = await fetch(
+				`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/services/${serviceFilename}/${toggleStatus}`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+						Authorization: `Bearer ${token}`,
+					},
+				}
+			);
+
+			if (!response.ok) {
+				const errorData = await response.json().catch(() => null);
+				throw new Error(
+					errorData?.error?.message ||
+						errorData?.error ||
+						`Failed to ${toggleStatus} service: ${response.status} ${response.statusText}`
+				);
+			}
+
+			// Refresh services list after successful toggle
+			await fetchServices();
+		} catch (err) {
+			console.error("Error toggling service:", err);
+			setError(
+				err instanceof Error
+					? err.message
+					: `Failed to ${toggleStatus} service ${serviceName}`
+			);
+		}
+	};
+
 	return (
 		<div className="space-y-6">
 			{/* Page Header */}
@@ -97,6 +135,7 @@ export default function ServicesPage() {
 				<TableMachineServices
 					data={services}
 					handleViewLogs={handleViewLogs}
+					handleToggleStatus={handleToggleStatus}
 				/>
 			)}
 

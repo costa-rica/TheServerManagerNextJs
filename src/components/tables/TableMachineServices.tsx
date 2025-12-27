@@ -11,12 +11,15 @@ import {
 	FilterFn,
 } from "@tanstack/react-table";
 import { Service } from "@/types/service";
-import { Modal } from "@/components/ui/modal";
-import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
 interface TableMachineServicesProps {
 	data: Service[];
 	handleViewLogs: (serviceName: string) => void;
+	handleToggleStatus: (
+		serviceFilename: string,
+		toggleStatus: string,
+		serviceName: string
+	) => void;
 }
 
 // Custom filter function for searching services by name
@@ -56,15 +59,35 @@ const extractTimeLeft = (timerTrigger: string | undefined): string => {
 export default function TableMachineServices({
 	data,
 	handleViewLogs,
+	handleToggleStatus,
 }: TableMachineServicesProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [isModalOpen, setIsModalOpen] = useState(false);
-	const [selectedService, setSelectedService] = useState<Service | null>(null);
 
 	const handleStatusClick = (service: Service) => {
-		setSelectedService(service);
-		setIsModalOpen(true);
+		// Determine serviceFilename based on whether there's a timerStatus
+		let serviceFilename = service.filename;
+		if (service.timerStatus) {
+			// Replace .service with .timer
+			serviceFilename = service.filename.replace(".service", ".timer");
+		}
+
+		// Determine toggleStatus based on the rules
+		let toggleStatus: string;
+		if (service.filename === "tsm-api.service") {
+			// Special case: always restart for tsm-api.service
+			toggleStatus = "restart";
+		} else {
+			// Check if status starts with "active" or "inactive"
+			const statusToCheck = service.timerStatus || service.status;
+			if (statusToCheck.toLowerCase().startsWith("active")) {
+				toggleStatus = "stop";
+			} else {
+				toggleStatus = "start";
+			}
+		}
+
+		handleToggleStatus(serviceFilename, toggleStatus, service.name);
 	};
 
 	const columns = useMemo<ColumnDef<Service>[]>(
@@ -139,7 +162,7 @@ export default function TableMachineServices({
 				},
 			},
 		],
-		[handleViewLogs]
+		[handleViewLogs, handleToggleStatus]
 	);
 
 	const table = useReactTable({
@@ -249,16 +272,6 @@ export default function TableMachineServices({
 					</tbody>
 				</table>
 			</div>
-
-			{/* Modal for service toggle placeholder */}
-			<Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-				<ModalInformationOk
-					title="Toggle Service"
-					message={`This is a placeholder for toggling the service: ${selectedService?.name}`}
-					onClose={() => setIsModalOpen(false)}
-					variant="info"
-				/>
-			</Modal>
 		</div>
 	);
 }
