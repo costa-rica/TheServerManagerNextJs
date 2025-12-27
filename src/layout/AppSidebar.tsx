@@ -304,7 +304,7 @@ const AppSidebar: React.FC = () => {
 				{(!isExpanded && !isMobileOpen) && <div />}
 				<ThemeToggleButton />
 			</div>
-			<div className="pt-20 flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+			<div className="pt-20 flex-1 flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
 				{/* Username Display */}
 				{(isExpanded || isMobileOpen) && (
 					<div className="mb-6 px-2 py-3 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -321,8 +321,8 @@ const AppSidebar: React.FC = () => {
 				<nav className="mb-6">
 					{renderMenuItems(navItems, "main")}
 				</nav>
-				{isExpanded || isMobileOpen ? <SidebarWidget /> : null}
 			</div>
+			{isExpanded || isMobileOpen ? <SidebarWidget /> : null}
 		</aside>
 	);
 };
