@@ -304,17 +304,6 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 					<label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
 						Services
 					</label>
-
-					{/* Check Service Files Button */}
-					<button
-						type="button"
-						onClick={checkServiceFiles}
-						disabled={isCheckingServices}
-						className="mb-4 px-4 py-2 text-xs bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-					>
-						{isCheckingServices ? "checking..." : "check .service files"}
-					</button>
-
 					<div className="space-y-4">
 						{services.map((service, index) => (
 							<div
@@ -441,6 +430,14 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 						className="px-6 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg font-medium transition-colors"
 					>
 						Cancel
+					</button>
+					<button
+						type="button"
+						onClick={checkServiceFiles}
+						disabled={isCheckingServices}
+						className="px-6 py-2 bg-success-500 hover:bg-success-600 dark:bg-success-400 dark:hover:bg-success-500 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+					>
+						{isCheckingServices ? "checking..." : "check .service files"}
 					</button>
 					<button
 						type="submit"
