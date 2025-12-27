@@ -1,10 +1,13 @@
 "use client";
 import Link from "next/link";
+import Image from "next/image";
 import React, { useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function ForgotPasswordForm() {
+	const { theme } = useTheme();
 	const [email, setEmail] = useState("");
 	const [isSubmitted, setIsSubmitted] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
@@ -84,13 +87,16 @@ export default function ForgotPasswordForm() {
 	if (isSubmitted) {
 		return (
 			<div className="flex flex-col items-center justify-center w-full min-h-screen px-6 py-8">
-				{/* Terminal Logo */}
+				{/* Logo */}
 				<div className="flex items-center justify-center w-full h-1/3 min-h-[200px] mb-8">
-					<h1 className="text-5xl sm:text-6xl md:text-7xl font-mono tracking-wide">
-						<span className="text-gray-900 dark:text-white">$ the-</span>
-						<span className="text-brand-500">404</span>
-						<span className="text-gray-900 dark:text-white">&gt; _</span>
-					</h1>
+					<Image
+						src={theme === "dark" ? "/images/logo06-NR-darkTheme.png" : "/images/logo06-NR.png"}
+						alt="The Server Manager"
+						width={400}
+						height={80}
+						className="h-12 sm:h-16 md:h-20 w-auto"
+						priority
+					/>
 				</div>
 
 				{/* Success Message */}
@@ -119,13 +125,16 @@ export default function ForgotPasswordForm() {
 
 	return (
 		<div className="flex flex-col items-center justify-start w-full min-h-screen px-6 py-8">
-			{/* Terminal Logo */}
+			{/* Logo */}
 			<div className="flex items-center justify-center w-full h-1/3 min-h-[200px] mb-8">
-				<h1 className="text-5xl sm:text-6xl md:text-7xl font-mono tracking-wide">
-					<span className="text-gray-900 dark:text-white">$ the-</span>
-					<span className="text-brand-500">404</span>
-					<span className="text-gray-900 dark:text-white">&gt; _</span>
-				</h1>
+				<Image
+					src={theme === "dark" ? "/images/logo06-NR-darkTheme.png" : "/images/logo06-NR.png"}
+					alt="The Server Manager"
+					width={400}
+					height={80}
+					className="h-12 sm:h-16 md:h-20 w-auto"
+					priority
+				/>
 			</div>
 
 			{/* Forgot Password Form */}

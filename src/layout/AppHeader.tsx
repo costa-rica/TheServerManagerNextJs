@@ -1,13 +1,16 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
+import { useTheme } from "@/context/ThemeContext";
 import { useAppSelector, useAppDispatch } from "@/store/hooks";
 import { connectMachine } from "@/store/features/machines/machineSlice";
 import Link from "next/link";
+import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDownIcon } from "@/icons";
 
 const AppHeader: React.FC = () => {
 	const { isMobileOpen, toggleMobileSidebar } = useSidebar();
+	const { theme } = useTheme();
 	const dispatch = useAppDispatch();
 	const connectedMachine = useAppSelector((s) => s.machine.connectedMachine);
 	const machinesArray = useAppSelector((s) => s.machine.machinesArray);
@@ -80,11 +83,13 @@ const AppHeader: React.FC = () => {
 						href="/"
 						className={machineName ? "hidden lg:block" : "block"}
 					>
-						<h1 className="text-2xl sm:text-3xl font-mono tracking-wide">
-							<span className="text-gray-900 dark:text-white">$ the-</span>
-							<span className="text-brand-500">404</span>
-							<span className="text-gray-900 dark:text-white">&gt; _</span>
-						</h1>
+						<Image
+							src={theme === "dark" ? "/images/logo06-NR-darkTheme.png" : "/images/logo06-NR.png"}
+							alt="The Server Manager"
+							width={200}
+							height={40}
+							className="h-8 sm:h-10 w-auto"
+						/>
 					</Link>
 
 					{/* Connected Machine Info - Center with Dropdown */}

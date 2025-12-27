@@ -239,59 +239,19 @@ The font is loaded via Google Fonts in `src/app/layout.tsx` and applied globally
 
 ## Logo Implementation
 
-**IMPLEMENTATION STATUS:** Fully implemented
+**IMPLEMENTATION STATUS:** Not implemented
 
-**IMPORTANT:** The Server Manager NextJs uses a **text-based terminal prompt** as its logo, not an image file. This reinforces the terminal aesthetic and ensures crisp rendering at all sizes.
+**IMPORTANT:** The Server Manager NextJs the logos found in:
 
-### Logo Format
+- Light mode: public/images/logo06-NR.png
+- Dark mode: public/images/logo06-NR-darkTheme.png
+- Favicon: src/app/favicon.ico
 
-The logo should always be rendered as text in this exact format:
-
-```
-$ the-404> _
-```
-
-### Color Scheme
-
-- **"404"**: Always terminal orange (`text-brand-500` = `#e95420`)
-- **"$ the-" and "> \_"**: Theme-adaptive
-  - Light mode: Black (`text-gray-900`)
-  - Dark mode: White (`text-white`)
-
-### Implementation Code
-
-Use this code pattern for all logo implementations:
-
-```tsx
-<h1 className="text-5xl sm:text-6xl md:text-7xl font-mono tracking-wide">
-  <span className="text-gray-900 dark:text-white">$ the-</span>
-  <span className="text-brand-500">404</span>
-  <span className="text-gray-900 dark:text-white">&gt; _</span>
-</h1>
-```
-
-**Size variants** (adjust as needed for context):
-
-- **Large** (auth pages): `text-5xl sm:text-6xl md:text-7xl`
-- **Medium** (headers): `text-3xl sm:text-4xl`
-- **Small** (compact areas): `text-xl sm:text-2xl`
-
-### Current Usage
+### Logo Usage
 
 - **Login page**: `src/components/auth/LoginForm.tsx`
 - **Forgot password page**: `src/components/auth/ForgotPasswordForm.tsx`
 - **App header** (planned): `src/layout/AppHeader.tsx` - should use medium variant
-
-### Why Text, Not Images?
-
-1. **Scalability**: Perfect rendering at any size/resolution
-2. **Theme adaptation**: Automatically adjusts to dark/light mode
-3. **Terminal aesthetic**: Reinforces the command-line interface design language
-4. **Performance**: No image loading required
-5. **Accessibility**: Screen readers can properly interpret text
-6. **Maintainability**: Easy to update styling without regenerating images
-
-**Note**: Historical PNG logo files (`logo02_blackFont.png`, `logo02_whiteFont.png`) exist in `public/images/` but should not be used. All new implementations must use the text-based format above.
 
 ## Design Guidelines
 

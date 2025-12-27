@@ -1,12 +1,14 @@
 "use client";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useRouter } from "next/navigation";
 import { loginUser } from "@/store/features/user/userSlice";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
+import { useTheme } from "@/context/ThemeContext";
 
 // export default function SignInForm() {
 export default function LoginForm() {
@@ -31,6 +33,7 @@ export default function LoginForm() {
   });
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const { theme } = useTheme();
   // const userReducer = useSelector((state) => state.user);
   const userReducer = useAppSelector((s) => s.user);
 
@@ -105,13 +108,16 @@ export default function LoginForm() {
 
   return (
     <div className="flex flex-col items-center justify-start w-full min-h-screen px-6 py-8">
-      {/* Terminal Logo */}
+      {/* Logo */}
       <div className="flex items-center justify-center w-full h-1/3 min-h-[200px] mb-8">
-        <h1 className="text-5xl sm:text-6xl md:text-7xl font-mono tracking-wide">
-          <span className="text-gray-900 dark:text-white">$ the-</span>
-          <span className="text-brand-500">404</span>
-          <span className="text-gray-900 dark:text-white">&gt; _</span>
-        </h1>
+        <Image
+          src={theme === "dark" ? "/images/logo06-NR-darkTheme.png" : "/images/logo06-NR.png"}
+          alt="The Server Manager"
+          width={400}
+          height={80}
+          className="h-12 sm:h-16 md:h-20 w-auto"
+          priority
+        />
       </div>
 
       {/* Login Form */}
