@@ -1,13 +1,14 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronDownIcon } from "@/icons";
+import { ServiceConfig } from "@/types/machine";
 
 interface ModalMachineAddProps {
   onClose: () => void;
   onSubmit: (machineData: {
     urlFor404Api: string;
     nginxStoragePathOptions: string[];
-    serviceFilename: string;
+    servicesArray: ServiceConfig[];
   }) => void;
 }
 
@@ -15,13 +16,22 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [serviceFilename, setServiceFilename] = useState("");
   const [urlFor404Api, setUrlFor404Api] = useState("");
   const [nginxPaths, setNginxPaths] = useState<string[]>([
     "/etc/nginx/sites-available",
     "/etc/nginx/conf.d",
   ]);
   const [isNginxPathsExpanded, setIsNginxPathsExpanded] = useState(false);
+  const [services, setServices] = useState<ServiceConfig[]>([
+    {
+      name: "", // Will be auto-populated by backend
+      filename: "",
+      pathToLogs: "/home/nick/logs/",
+      filenameTimer: "",
+      port: undefined,
+    },
+  ]);
+  const [expandedServices, setExpandedServices] = useState<boolean[]>([true]); // First service expanded by default
 
   const handleAddPath = () => {
     setNginxPaths([...nginxPaths, ""]);
@@ -37,12 +47,54 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
     setNginxPaths(newPaths);
   };
 
+  const handleAddService = () => {
+    setServices([
+      ...services,
+      {
+        name: "", // Will be auto-populated by backend
+        filename: "",
+        pathToLogs: "/home/nick/logs/",
+        filenameTimer: "",
+        port: undefined,
+      },
+    ]);
+    setExpandedServices([...expandedServices, true]); // New service expanded by default
+  };
+
+  const handleRemoveService = (index: number) => {
+    setServices(services.filter((_, i) => i !== index));
+    setExpandedServices(expandedServices.filter((_, i) => i !== index));
+  };
+
+  const toggleServiceExpanded = (index: number) => {
+    const newExpanded = [...expandedServices];
+    newExpanded[index] = !newExpanded[index];
+    setExpandedServices(newExpanded);
+  };
+
+  const handleServiceChange = (
+    index: number,
+    field: keyof ServiceConfig,
+    value: string | number | undefined
+  ) => {
+    const newServices = [...services];
+    if (field === "port") {
+      newServices[index][field] = value ? Number(value) : undefined;
+    } else if (field === "name") {
+      // Name is not editable - will be auto-populated by backend
+      return;
+    } else {
+      (newServices[index][field] as string | undefined) =
+        value === "" ? undefined : (value as string);
+    }
+    setServices(newServices);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validation
-    if (!serviceFilename.trim() || !urlFor404Api.trim()) {
-      // Just prevent submission - user will see empty required fields
+    if (!urlFor404Api.trim()) {
       return;
     }
 
@@ -58,15 +110,29 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
     // Filter out empty nginx paths
     const filteredPaths = nginxPaths.filter((path) => path.trim() !== "");
 
+    // Filter and validate services
+    const filteredServices = services
+      .filter(
+        (service) =>
+          service.filename.trim() !== "" && service.pathToLogs.trim() !== ""
+      )
+      .map((service) => ({
+        name: "", // Will be auto-populated by backend
+        filename: service.filename.trim(),
+        pathToLogs: service.pathToLogs.trim(),
+        filenameTimer: service.filenameTimer?.trim() || undefined,
+        port: service.port,
+      }));
+
     onSubmit({
       urlFor404Api: apiUrl,
       nginxStoragePathOptions: filteredPaths,
-      serviceFilename: serviceFilename.trim(),
+      servicesArray: filteredServices,
     });
   };
 
   return (
-    <div className="p-6 sm:p-8">
+    <div className="p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
       {/* Title */}
       <div className="mb-6">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -79,24 +145,6 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Service File Filename */}
-        <div>
-          <label
-            htmlFor="serviceFilename"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-          >
-            Service file filename <span className="text-error-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="serviceFilename"
-            value={serviceFilename}
-            onChange={(e) => setServiceFilename(e.target.value)}
-            placeholder="e.g., api-name.service"
-            className="w-full px-4 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-          />
-        </div>
-
         {/* API URL */}
         <div>
           <label
@@ -113,6 +161,125 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
             placeholder="e.g., https://maestro03.the404api.dashanddata.com"
             className="w-full px-4 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
           />
+        </div>
+
+        {/* Services Array */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Services
+          </label>
+          <div className="space-y-4">
+            {services.map((service, index) => (
+              <div
+                key={index}
+                className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 space-y-3"
+              >
+                <div
+                  className="flex justify-between items-center mb-2 cursor-pointer"
+                  onClick={() => toggleServiceExpanded(index)}
+                >
+                  <div className="flex items-center gap-2">
+                    <ChevronDownIcon
+                      className={`w-5 h-5 transition-transform duration-200 text-gray-700 dark:text-gray-300 ${
+                        expandedServices[index] ? "rotate-180" : ""
+                      }`}
+                    />
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Service {index + 1}
+                    </h4>
+                  </div>
+                  {services.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveService(index);
+                      }}
+                      className="text-xs px-2 py-1 bg-error-100 hover:bg-error-200 dark:bg-error-900/20 dark:hover:bg-error-900/30 text-error-700 dark:text-error-400 rounded transition-colors"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                {/* Filename */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                    Filename <span className="text-error-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={service.filename}
+                    onChange={(e) =>
+                      handleServiceChange(index, "filename", e.target.value)
+                    }
+                    placeholder="e.g., personalweb03-api.service"
+                    className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                  />
+                </div>
+
+                {/* Collapsible section */}
+                {expandedServices[index] && (
+                  <>
+                    {/* Path to Logs */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Path to Logs <span className="text-error-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={service.pathToLogs}
+                        onChange={(e) =>
+                          handleServiceChange(index, "pathToLogs", e.target.value)
+                        }
+                        placeholder="/home/nick/logs/"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Filename Timer (optional) */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Timer Filename (optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={service.filenameTimer || ""}
+                        onChange={(e) =>
+                          handleServiceChange(index, "filenameTimer", e.target.value)
+                        }
+                        placeholder="e.g., personalweb03-api.timer"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                      />
+                    </div>
+
+                    {/* Port (optional) */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
+                        Port (optional)
+                      </label>
+                      <input
+                        type="number"
+                        value={service.port || ""}
+                        onChange={(e) =>
+                          handleServiceChange(index, "port", e.target.value)
+                        }
+                        placeholder="e.g., 3001"
+                        className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400 dark:hover:text-brand-500 font-medium transition-colors"
+            >
+              + Add another service
+            </button>
+          </div>
         </div>
 
         {/* Nginx Storage Path Options - Collapsible */}

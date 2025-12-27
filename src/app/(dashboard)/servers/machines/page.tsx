@@ -99,7 +99,7 @@ export default function MachinesPage() {
   const handleAddMachine = async (machineData: {
     urlFor404Api: string;
     nginxStoragePathOptions: string[];
-    serviceFilename: string;
+    servicesArray: ServiceConfig[];
   }) => {
     console.log("Adding machine:", machineData);
 
