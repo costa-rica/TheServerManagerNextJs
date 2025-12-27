@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Machine, ServiceConfig } from "@/types/machine";
+import { ChevronDownIcon } from "@/icons";
 
 interface ModalMachineEditProps {
 	machine: Machine;
@@ -37,6 +38,11 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 					},
 			  ]
 	);
+	const [expandedServices, setExpandedServices] = useState<boolean[]>(
+		machine.servicesArray && machine.servicesArray.length > 0
+			? machine.servicesArray.map(() => false) // Existing services collapsed by default
+			: [true] // New empty service expanded by default
+	);
 
 	const handleAddNginxPath = () => {
 		setNginxPaths([...nginxPaths, ""]);
@@ -63,10 +69,18 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 				port: undefined,
 			},
 		]);
+		setExpandedServices([...expandedServices, true]); // New service expanded by default
 	};
 
 	const handleRemoveService = (index: number) => {
 		setServices(services.filter((_, i) => i !== index));
+		setExpandedServices(expandedServices.filter((_, i) => i !== index));
+	};
+
+	const toggleServiceExpanded = (index: number) => {
+		const newExpanded = [...expandedServices];
+		newExpanded[index] = !newExpanded[index];
+		setExpandedServices(newExpanded);
 	};
 
 	const handleServiceChange = (
@@ -209,14 +223,27 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 								key={index}
 								className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 space-y-3"
 							>
-								<div className="flex justify-between items-center mb-2">
-									<h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-										Service {index + 1}
-									</h4>
+								<div
+									className="flex justify-between items-center mb-2 cursor-pointer"
+									onClick={() => toggleServiceExpanded(index)}
+								>
+									<div className="flex items-center gap-2">
+										<ChevronDownIcon
+											className={`w-5 h-5 transition-transform duration-200 text-gray-700 dark:text-gray-300 ${
+												expandedServices[index] ? "rotate-180" : ""
+											}`}
+										/>
+										<h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+											Service {index + 1}
+										</h4>
+									</div>
 									{services.length > 1 && (
 										<button
 											type="button"
-											onClick={() => handleRemoveService(index)}
+											onClick={(e) => {
+												e.stopPropagation();
+												handleRemoveService(index);
+											}}
 											className="text-xs px-2 py-1 bg-error-100 hover:bg-error-200 dark:bg-error-900/20 dark:hover:bg-error-900/30 text-error-700 dark:text-error-400 rounded transition-colors"
 										>
 											Remove
@@ -239,6 +266,10 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 										className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
 									/>
 								</div>
+
+								{/* Collapsible section */}
+								{expandedServices[index] && (
+									<>
 
 								{/* Service Filename */}
 								<div>
@@ -303,6 +334,8 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 										className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
 									/>
 								</div>
+									</>
+								)}
 							</div>
 						))}
 						<button
