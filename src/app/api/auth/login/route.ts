@@ -4,26 +4,40 @@ import { cookies } from "next/headers";
 
 export async function POST(request: NextRequest) {
 	try {
+		console.log("=== Login API Route Called ===");
+		console.log("Environment:", process.env.NODE_ENV);
+		console.log("API URL:", process.env.NEXT_PUBLIC_INTERNAL_API_BASE_URL);
+
 		const { email, password } = await request.json();
+		console.log("Request data:", { email, password: password ? "***" : "missing" });
+
+		const apiUrl = `${process.env.NEXT_PUBLIC_INTERNAL_API_BASE_URL}/users/login`;
+		console.log("Calling backend API:", apiUrl);
 
 		// Call the backend API (internal route from server)
-		const response = await fetch(
-			`${process.env.NEXT_PUBLIC_INTERNAL_API_BASE_URL}/users/login`,
-			{
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ email, password }),
-			}
-		);
+		const response = await fetch(apiUrl, {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ email, password }),
+		});
+
+		console.log("Backend response status:", response.status);
+		console.log("Backend response headers:", Object.fromEntries(response.headers.entries()));
 
 		const contentType = response.headers.get("Content-Type");
 		let resJson = null;
 
 		if (contentType?.includes("application/json")) {
 			resJson = await response.json();
+			console.log("Backend response JSON:", { ...resJson, token: resJson?.token ? "***" : "missing" });
+		} else {
+			console.error("Backend did not return JSON. Content-Type:", contentType);
+			const text = await response.text();
+			console.error("Response body:", text);
 		}
 
 		if (response.ok && resJson?.token) {
+			console.log("Login successful, setting cookie");
 			// Set HTTP-only cookie with the token (for middleware protection)
 			const cookieStore = await cookies();
 			cookieStore.set("auth-token", resJson.token, {
@@ -46,6 +60,7 @@ export async function POST(request: NextRequest) {
 			});
 		} else {
 			// Login failed
+			console.error("Login failed:", resJson?.error || `Server error: ${response.status}`);
 			return NextResponse.json(
 				{
 					success: false,
@@ -55,9 +70,17 @@ export async function POST(request: NextRequest) {
 			);
 		}
 	} catch (error) {
-		console.error("Login API route error:", error);
+		console.error("Login API route error - DETAILED:", error);
+		console.error("Error type:", error instanceof Error ? error.constructor.name : typeof error);
+		console.error("Error message:", error instanceof Error ? error.message : String(error));
+		console.error("Error stack:", error instanceof Error ? error.stack : "No stack trace");
+
 		return NextResponse.json(
-			{ success: false, error: "Internal server error" },
+			{
+				success: false,
+				error: "Internal server error",
+				details: error instanceof Error ? error.message : String(error)
+			},
 			{ status: 500 }
 		);
 	}

@@ -97,7 +97,9 @@ export default function LoginForm() {
     } else {
       const errorMessage =
         resJson?.error || `There was a server error: ${response.status}`;
-      showInfoModal("Login Failed", errorMessage, "error");
+      const errorDetails = resJson?.details ? ` (${resJson.details})` : "";
+      console.error("Login failed:", errorMessage, errorDetails);
+      showInfoModal("Login Failed", errorMessage + errorDetails, "error");
     }
   };
 
