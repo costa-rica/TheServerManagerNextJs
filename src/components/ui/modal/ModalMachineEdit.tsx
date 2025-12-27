@@ -122,12 +122,11 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 		const filteredServices = services
 			.filter(
 				(service) =>
-					service.name.trim() !== "" &&
 					service.filename.trim() !== "" &&
 					service.pathToLogs.trim() !== ""
 			)
 			.map((service) => ({
-				name: service.name.trim(),
+				name: service.name || "", // Preserve existing name or use empty string
 				filename: service.filename.trim(),
 				pathToLogs: service.pathToLogs.trim(),
 				filenameTimer: service.filenameTimer?.trim() || undefined,
@@ -235,6 +234,9 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 										/>
 										<h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
 											Service {index + 1}
+											{service.name && service.name.trim() !== "" && (
+												<span>: {service.name}</span>
+											)}
 										</h4>
 									</div>
 									{services.length > 1 && (
@@ -249,22 +251,6 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
 											Remove
 										</button>
 									)}
-								</div>
-
-								{/* Service Name */}
-								<div>
-									<label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">
-										Service Name <span className="text-error-500">*</span>
-									</label>
-									<input
-										type="text"
-										value={service.name}
-										onChange={(e) =>
-											handleServiceChange(index, "name", e.target.value)
-										}
-										placeholder="e.g., PersonalWeb03 API"
-										className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
-									/>
 								</div>
 
 								{/* Collapsible section */}
