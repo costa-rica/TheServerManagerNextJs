@@ -17,10 +17,17 @@ export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 	const [error, setError] = useState<string | null>(null);
 
 	const token = useAppSelector((state) => state.user.token);
+	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
 
 	// Fetch logs function
 	useEffect(() => {
 		const fetchLogs = async () => {
+			if (!connectedMachine) {
+				setError("No machine connected");
+				setLoading(false);
+				return;
+			}
+
 			setLoading(true);
 			setError(null);
 
@@ -28,7 +35,7 @@ export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 				// URL encode the service name to handle spaces
 				const encodedServiceName = encodeURIComponent(serviceName);
 				const response = await fetch(
-					`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/services/logs/${encodedServiceName}`,
+					`${connectedMachine.urlFor404Api}/services/logs/${encodedServiceName}`,
 					{
 						method: "GET",
 						headers: {
@@ -56,7 +63,7 @@ export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 		};
 
 		fetchLogs();
-	}, [serviceName, token]);
+	}, [serviceName, token, connectedMachine]);
 
 	return (
 		<div className="flex flex-col w-[95vw] h-[95vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
