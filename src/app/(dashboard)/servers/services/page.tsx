@@ -13,14 +13,21 @@ export default function ServicesPage() {
 	const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 	const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
 	const token = useAppSelector((state) => state.user.token);
+	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
 
 	const fetchServices = useCallback(async () => {
+		if (!connectedMachine) {
+			setServices([]);
+			setLoading(false);
+			return;
+		}
+
 		setLoading(true);
 		setError(null);
 
 		try {
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/services`,
+				`${connectedMachine.urlFor404Api}/services`,
 				{
 					method: "GET",
 					headers: {
@@ -51,7 +58,7 @@ export default function ServicesPage() {
 			setError(err instanceof Error ? err.message : "Failed to fetch services");
 			setLoading(false);
 		}
-	}, [token]);
+	}, [connectedMachine, token]);
 
 	useEffect(() => {
 		fetchServices();
@@ -67,9 +74,14 @@ export default function ServicesPage() {
 		toggleStatus: string,
 		serviceName: string
 	) => {
+		if (!connectedMachine) {
+			setError("No machine connected. Please connect to a machine first.");
+			return;
+		}
+
 		try {
 			const response = await fetch(
-				`${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/services/${serviceFilename}/${toggleStatus}`,
+				`${connectedMachine.urlFor404Api}/services/${serviceFilename}/${toggleStatus}`,
 				{
 					method: "POST",
 					headers: {
@@ -123,15 +135,24 @@ export default function ServicesPage() {
 				</div>
 			)}
 
+			{/* No Machine Connected State */}
+			{!loading && !connectedMachine && (
+				<div className="text-center py-12">
+					<p className="text-gray-500 dark:text-gray-400">
+						Please connect to a machine to view services
+					</p>
+				</div>
+			)}
+
 			{/* Error State */}
-			{error && !loading && (
+			{error && !loading && connectedMachine && (
 				<div className="bg-error-50 dark:bg-error-900/20 border border-error-500 rounded-lg p-4">
 					<p className="text-error-700 dark:text-error-400">{error}</p>
 				</div>
 			)}
 
 			{/* Services Table */}
-			{!loading && !error && (
+			{!loading && !error && connectedMachine && (
 				<TableMachineServices
 					data={services}
 					handleViewLogs={handleViewLogs}
