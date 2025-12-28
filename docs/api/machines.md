@@ -30,7 +30,12 @@ curl --location 'http://localhost:3000/machines/name' \
 
 ```json
 {
-  "error": "Failed to retrieve machine information"
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Failed to retrieve machine information",
+    "details": "Detailed error message (only in development mode)",
+    "status": 500
+  }
 }
 ```
 
@@ -47,7 +52,7 @@ Build a services array by scanning `/home/nick/nick-systemctl.csv` and validatin
 1. Reads `/home/nick/nick-systemctl.csv` and extracts unique unit filenames from the `unit` column
 2. Builds a service map linking `.timer` files to their corresponding `.service` files
 3. Validates that all service files exist in `/etc/systemd/system/`
-4. Extracts port numbers from each service file (looks for `PORT=` or `0.0.0.0:` followed by exactly 4 digits)
+4. Extracts port numbers from each service file (looks for `PORT=`, `0.0.0.0:`, or `--port` followed by exactly 4 digits)
 5. Returns array of service objects with `filename`, optional `port`, and optional `filenameTimer`
 
 **CSV File Format:**
@@ -192,7 +197,7 @@ curl --location 'http://localhost:3000/machines/check-nick-systemctl' \
 
 - Only processes `.service` and `.timer` files from CSV
 - `.timer` files must have a corresponding `.service` file with the same base name
-- Port extraction looks for exactly 4-digit numbers after `PORT=` or `0.0.0.0:`
+- Port extraction looks for exactly 4-digit numbers after `PORT=`, `0.0.0.0:`, or `--port` (searched in that order)
 - Returns first matching port pattern found in service file
 - Port and timer fields are optional in response (only included if found)
 - All errors follow standardized error response format
@@ -323,7 +328,12 @@ curl --location 'http://localhost:3000/machines' \
 
 ```json
 {
-  "error": "Missing urlFor404Api, nginxStoragePathOptions"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "Missing required fields: urlFor404Api, nginxStoragePathOptions",
+    "status": 400
+  }
 }
 ```
 
@@ -331,7 +341,12 @@ curl --location 'http://localhost:3000/machines' \
 
 ```json
 {
-  "error": "nginxStoragePathOptions must be an array of strings"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "nginxStoragePathOptions must be an array of strings",
+    "status": 400
+  }
 }
 ```
 
@@ -339,7 +354,12 @@ curl --location 'http://localhost:3000/machines' \
 
 ```json
 {
-  "error": "Service at index 0 is missing required fields: filename, pathToLogs"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "Service at index 0 is missing required fields: filename, pathToLogs",
+    "status": 400
+  }
 }
 ```
 
@@ -399,7 +419,12 @@ curl --location 'http://localhost:3000/machines' \
 
 ```json
 {
-  "error": "Failed to create machine"
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Failed to create machine",
+    "details": "Detailed error message (only in development mode)",
+    "status": 500
+  }
 }
 ```
 
@@ -488,7 +513,12 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 
 ```json
 {
-  "error": "publicId parameter must be a non-empty string"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "publicId parameter must be a non-empty string",
+    "status": 400
+  }
 }
 ```
 
@@ -496,7 +526,12 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 
 ```json
 {
-  "error": "At least one field must be provided for update (urlFor404Api, nginxStoragePathOptions, or servicesArray)"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "At least one field must be provided for update (urlFor404Api, nginxStoragePathOptions, or servicesArray)",
+    "status": 400
+  }
 }
 ```
 
@@ -504,7 +539,11 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 
 ```json
 {
-  "error": "Machine not found"
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Machine not found",
+    "status": 404
+  }
 }
 ```
 
@@ -512,7 +551,12 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 
 ```json
 {
-  "error": "Failed to update machine"
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Failed to update machine",
+    "details": "Detailed error message (only in development mode)",
+    "status": 500
+  }
 }
 ```
 
@@ -565,7 +609,12 @@ curl --location --request DELETE 'http://localhost:3000/machines/a3f2b1c4-5d6e-7
 
 ```json
 {
-  "error": "publicId parameter must be a non-empty string"
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Request validation failed",
+    "details": "publicId parameter must be a non-empty string",
+    "status": 400
+  }
 }
 ```
 
@@ -573,7 +622,11 @@ curl --location --request DELETE 'http://localhost:3000/machines/a3f2b1c4-5d6e-7
 
 ```json
 {
-  "error": "Machine not found"
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Machine not found",
+    "status": 404
+  }
 }
 ```
 
@@ -581,6 +634,11 @@ curl --location --request DELETE 'http://localhost:3000/machines/a3f2b1c4-5d6e-7
 
 ```json
 {
-  "error": "Failed to delete machine"
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Failed to delete machine",
+    "details": "Detailed error message (only in development mode)",
+    "status": 500
+  }
 }
 ```
