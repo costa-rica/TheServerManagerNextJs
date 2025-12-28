@@ -1,8 +1,15 @@
 // src/app/api/auth/verify/route.ts
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { withLogging } from "@/lib/apiLogger";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+	return withLogging(request, async () => {
+		return await handleVerify();
+	});
+}
+
+async function handleVerify() {
 	try {
 		const cookieStore = await cookies();
 		const token = cookieStore.get("auth-token");

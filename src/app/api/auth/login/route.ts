@@ -1,8 +1,15 @@
 // src/app/api/auth/login/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { withLogging } from "@/lib/apiLogger";
 
 export async function POST(request: NextRequest) {
+	return withLogging(request, async () => {
+		return await handleLogin(request);
+	});
+}
+
+async function handleLogin(request: NextRequest) {
 	try {
 		console.log("=== Login API Route Called ===");
 		console.log("Environment:", process.env.NODE_ENV);
