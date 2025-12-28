@@ -12,37 +12,20 @@ import {
 } from "@tanstack/react-table";
 
 interface NginxFile {
-	_id: string;
+	publicId: string;
 	serverName: string;
 	portNumber: number;
 	serverNameArrayOfAdditionalServerNames: string[];
-	appHostServerMachineId: {
-		_id: string;
-		machineName: string;
-		urlFor404Api: string;
-		localIpAddress: string;
-		userHomeDir: string;
-		nginxStoragePathOptions: string[];
-		createdAt: string;
-		updatedAt: string;
-		__v: number;
-	} | null;
-	nginxHostServerMachineId: {
-		_id: string;
-		machineName: string;
-		urlFor404Api: string;
-		localIpAddress: string;
-		userHomeDir: string;
-		nginxStoragePathOptions: string[];
-		createdAt: string;
-		updatedAt: string;
-		__v: number;
-	} | null;
+	appHostServerMachinePublicId: string | null;
+	machineNameAppHost: string | null;
+	localIpAddressAppHost: string | null;
+	nginxHostServerMachinePublicId: string | null;
+	machineNameNginxHost: string | null;
+	localIpAddressNginxHost: string | null;
 	framework: string;
 	storeDirectory: string;
 	createdAt: string;
 	updatedAt: string;
-	__v: number;
 }
 
 interface TableNginxFilesProps {
@@ -58,7 +41,7 @@ const nginxFilterFn: FilterFn<NginxFile> = (row, columnId, filterValue) => {
 
 	return (
 		config.serverName?.toLowerCase().includes(searchValue) ||
-		config.appHostServerMachineId?.localIpAddress
+		config.localIpAddressAppHost
 			?.toLowerCase()
 			.includes(searchValue) ||
 		config.framework?.toLowerCase().includes(searchValue) ||
@@ -88,11 +71,11 @@ export default function TableNginxFiles({
 
 		data.forEach((config) => {
 			const nullFields: string[] = [];
-			if (config.appHostServerMachineId === null) {
-				nullFields.push('appHostServerMachineId');
+			if (config.appHostServerMachinePublicId === null) {
+				nullFields.push('appHostServerMachinePublicId');
 			}
-			if (config.nginxHostServerMachineId === null) {
-				nullFields.push('nginxHostServerMachineId');
+			if (config.nginxHostServerMachinePublicId === null) {
+				nullFields.push('nginxHostServerMachinePublicId');
 			}
 
 			if (nullFields.length > 0) {
@@ -145,8 +128,8 @@ export default function TableNginxFiles({
 				enableColumnFilter: false,
 				cell: (info) => {
 					const config = info.row.original;
-					const isStoreDirExpanded = expandedStoreDir.has(config._id);
-					const isNginxHostExpanded = expandedNginxHost.has(config._id);
+					const isStoreDirExpanded = expandedStoreDir.has(config.publicId);
+					const isNginxHostExpanded = expandedNginxHost.has(config.publicId);
 
 					return (
 						<div className="space-y-2">
@@ -184,7 +167,7 @@ export default function TableNginxFiles({
 								{/* Store Directory - Expandable */}
 								<div className="text-sm text-gray-700 dark:text-gray-300">
 									<button
-										onClick={() => toggleStoreDir(config._id)}
+										onClick={() => toggleStoreDir(config.publicId)}
 										className="font-medium hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer"
 									>
 										Store Directory: {isStoreDirExpanded ? "▼" : "▶"}
@@ -207,25 +190,25 @@ export default function TableNginxFiles({
 							{/* Nginx Config Host Details - Expandable */}
 							<div className="space-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
 								<button
-									onClick={() => toggleNginxHost(config._id)}
+									onClick={() => toggleNginxHost(config.publicId)}
 									className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide hover:text-brand-600 dark:hover:text-brand-400 transition-colors cursor-pointer"
 								>
 									Nginx Config Host Details {isNginxHostExpanded ? "▼" : "▶"}
 								</button>
 								{isNginxHostExpanded && (
 									<div className="ml-2 space-y-1">
-										{config.nginxHostServerMachineId ? (
+										{config.machineNameNginxHost ? (
 											<>
 												<div className="text-sm text-gray-700 dark:text-gray-300">
 													<span className="font-medium">Machine:</span>{" "}
 													<span className="font-mono text-xs">
-														{config.nginxHostServerMachineId.machineName}
+														{config.machineNameNginxHost}
 													</span>
 												</div>
 												<div className="text-sm text-gray-700 dark:text-gray-300">
 													<span className="font-medium">IP:</span>{" "}
 													<span className="font-mono">
-														{config.nginxHostServerMachineId.localIpAddress}
+														{config.localIpAddressNginxHost}
 													</span>
 												</div>
 											</>
@@ -242,7 +225,7 @@ export default function TableNginxFiles({
 				},
 			},
 			{
-				accessorKey: "appHostServerMachineId.machineName",
+				accessorKey: "machineNameAppHost",
 				header: "App Host Machine",
 				enableSorting: true,
 				enableColumnFilter: false,
@@ -250,13 +233,13 @@ export default function TableNginxFiles({
 					const config = info.row.original;
 					return (
 						<div className="space-y-1">
-							{config.appHostServerMachineId ? (
+							{config.machineNameAppHost ? (
 								<>
 									<div className="font-medium text-gray-900 dark:text-white">
-										{config.appHostServerMachineId.machineName}
+										{config.machineNameAppHost}
 									</div>
 									<div className="text-sm text-gray-500 dark:text-gray-400 font-mono">
-										{config.appHostServerMachineId.localIpAddress}
+										{config.localIpAddressAppHost}
 									</div>
 								</>
 							) : (
@@ -295,7 +278,7 @@ export default function TableNginxFiles({
 						<button
 							onClick={() =>
 								handleDeleteConfig(
-									info.row.original._id,
+									info.row.original.publicId,
 									info.row.original.serverName
 								)
 							}

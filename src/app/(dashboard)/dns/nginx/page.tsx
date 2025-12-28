@@ -9,37 +9,20 @@ import { useAppSelector } from "@/store/hooks";
 import TableNginxFiles from "@/components/tables/TableNginxFiles";
 
 interface NginxFile {
-	_id: string;
+	publicId: string;
 	serverName: string;
 	portNumber: number;
 	serverNameArrayOfAdditionalServerNames: string[];
-	appHostServerMachineId: {
-		_id: string;
-		machineName: string;
-		urlFor404Api: string;
-		localIpAddress: string;
-		userHomeDir: string;
-		nginxStoragePathOptions: string[];
-		createdAt: string;
-		updatedAt: string;
-		__v: number;
-	} | null;
-	nginxHostServerMachineId: {
-		_id: string;
-		machineName: string;
-		urlFor404Api: string;
-		localIpAddress: string;
-		userHomeDir: string;
-		nginxStoragePathOptions: string[];
-		createdAt: string;
-		updatedAt: string;
-		__v: number;
-	} | null;
+	appHostServerMachinePublicId: string | null;
+	machineNameAppHost: string | null;
+	localIpAddressAppHost: string | null;
+	nginxHostServerMachinePublicId: string | null;
+	machineNameNginxHost: string | null;
+	localIpAddressNginxHost: string | null;
 	framework: string;
 	storeDirectory: string;
 	createdAt: string;
 	updatedAt: string;
-	__v: number;
 }
 
 interface NginxFormState {
@@ -67,7 +50,7 @@ export default function NginxPage() {
 	const [loadingFiles, setLoadingFiles] = useState(true);
 	const [deleteConfigModalOpen, setDeleteConfigModalOpen] = useState(false);
 	const [configToDelete, setConfigToDelete] = useState<{
-		id: string;
+		publicId: string;
 		serverName: string;
 	} | null>(null);
 	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -335,7 +318,7 @@ export default function NginxPage() {
 	};
 
 	const handleDeleteConfigClick = (configId: string, serverName: string) => {
-		setConfigToDelete({ id: configId, serverName });
+		setConfigToDelete({ publicId: configId, serverName });
 		setDeleteConfigModalOpen(true);
 	};
 
@@ -344,7 +327,7 @@ export default function NginxPage() {
 
 		try {
 			const response = await fetch(
-				`${connectedMachine.urlFor404Api}/nginx/${configToDelete.id}`,
+				`${connectedMachine.urlFor404Api}/nginx/${configToDelete.publicId}`,
 				{
 					method: "DELETE",
 					headers: {
