@@ -7,6 +7,7 @@ import { ModalMachineAdd } from "@/components/ui/modal/ModalMachineAdd";
 import { ModalMachineEdit } from "@/components/ui/modal/ModalMachineEdit";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
+import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 import { Machine, ServiceConfig } from "@/types/machine";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setMachinesArray } from "@/store/features/machines/machineSlice";
@@ -16,6 +17,7 @@ export default function MachinesPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+  const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
   const [machineToEdit, setMachineToEdit] = useState<Machine | null>(null);
   const [infoModalData, setInfoModalData] = useState<{
     title: string;
@@ -26,6 +28,12 @@ export default function MachinesPage() {
     message: "",
     variant: "info",
   });
+  const [apiErrorData, setApiErrorData] = useState<{
+    code: string;
+    message: string;
+    details?: string | Record<string, unknown> | Array<unknown>;
+    status: number;
+  } | null>(null);
   const [machineToDelete, setMachineToDelete] = useState<{
     id: string;
     name: string;
@@ -139,8 +147,14 @@ export default function MachinesPage() {
         );
       }
     } else {
-      const errorMessage =
+      let errorMessage =
         resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+
+      // Append details if available
+      if (resJson?.error?.details) {
+        errorMessage += `\n\n${resJson.error.details}`;
+      }
+
       setIsModalOpen(false);
       showInfoModal("Error", errorMessage, "error");
     }
@@ -198,8 +212,14 @@ export default function MachinesPage() {
         showInfoModal("Error", "Error deleting machine", "error");
       }
     } else {
-      const errorMessage =
+      let errorMessage =
         resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+
+      // Append details if available
+      if (resJson?.error?.details) {
+        errorMessage += `\n\n${resJson.error.details}`;
+      }
+
       setDeleteModalOpen(false);
       setMachineToDelete(null);
       showInfoModal("Error", errorMessage, "error");
@@ -219,31 +239,57 @@ export default function MachinesPage() {
       servicesArray: ServiceConfig[];
     }
   ) => {
-    console.log("Updating machine:", publicId, updateData);
+    const requestUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines/${publicId}`;
+    const requestBody = JSON.stringify(updateData);
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines/${publicId}`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updateData),
-      }
-    );
+    // Log the full request (only in non-production)
+    if (process.env.NEXT_PUBLIC_MODE !== "production") {
+      console.log("=== EDIT MACHINE REQUEST ===");
+      console.log("URL:", requestUrl);
+      console.log("Method: PATCH");
+      console.log("Headers:", {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token?.substring(0, 20)}...`,
+      });
+      console.log("Body:", requestBody);
+      console.log("Body (parsed):", updateData);
+    }
 
-    console.log("Received response:", response.status);
+    const response = await fetch(requestUrl, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: requestBody,
+    });
+
+    // Log the response (only in non-production)
+    if (process.env.NEXT_PUBLIC_MODE !== "production") {
+      console.log("=== EDIT MACHINE RESPONSE ===");
+      console.log("Status:", response.status, response.statusText);
+      console.log("Headers:", Object.fromEntries(response.headers.entries()));
+    }
 
     let resJson = null;
     const contentType = response.headers.get("Content-Type");
 
     if (contentType?.includes("application/json")) {
       resJson = await response.json();
+      if (process.env.NEXT_PUBLIC_MODE !== "production") {
+        console.log("Response JSON:", resJson);
+        console.log("Response error object:", resJson?.error);
+      }
+    } else {
+      if (process.env.NEXT_PUBLIC_MODE !== "production") {
+        console.log("Response is not JSON. Content-Type:", contentType);
+      }
     }
 
     if (response.ok) {
-      console.log("Machine updated successfully:", resJson);
+      if (process.env.NEXT_PUBLIC_MODE !== "production") {
+        console.log("Machine updated successfully:", resJson);
+      }
       setEditModalOpen(false);
       setMachineToEdit(null);
 
@@ -264,11 +310,26 @@ export default function MachinesPage() {
         );
       }
     } else {
-      const errorMessage =
-        resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
-      setEditModalOpen(false);
-      setMachineToEdit(null);
-      showInfoModal("Error", errorMessage, "error");
+      // Check if we have a standardized API error response
+      if (resJson?.error && resJson.error.code && resJson.error.message && resJson.error.status) {
+        // Use the new ModalErrorResponse for standardized API errors
+        setApiErrorData({
+          code: resJson.error.code,
+          message: resJson.error.message,
+          details: resJson.error.details,
+          status: resJson.error.status,
+        });
+        setEditModalOpen(false);
+        setMachineToEdit(null);
+        setApiErrorModalOpen(true);
+      } else {
+        // Fallback to the old info modal for non-standardized errors
+        const errorMessage =
+          resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+        setEditModalOpen(false);
+        setMachineToEdit(null);
+        showInfoModal("Error", errorMessage, "error");
+      }
     }
   };
 
@@ -376,6 +437,25 @@ export default function MachinesPage() {
           onClose={() => setInfoModalOpen(false)}
         />
       </Modal>
+
+      {/* API Error Modal */}
+      {apiErrorData && (
+        <Modal
+          isOpen={apiErrorModalOpen}
+          onClose={() => {
+            setApiErrorModalOpen(false);
+            setApiErrorData(null);
+          }}
+        >
+          <ModalErrorResponse
+            error={apiErrorData}
+            onClose={() => {
+              setApiErrorModalOpen(false);
+              setApiErrorData(null);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
