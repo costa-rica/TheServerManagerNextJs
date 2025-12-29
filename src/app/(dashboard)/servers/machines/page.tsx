@@ -43,6 +43,7 @@ export default function MachinesPage() {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.user.token);
+  const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
 
   const showInfoModal = (
     title: string,
@@ -51,6 +52,12 @@ export default function MachinesPage() {
   ) => {
     setInfoModalData({ title, message, variant });
     setInfoModalOpen(true);
+  };
+
+  // Helper function to get the API base URL
+  // Uses connected machine's URL if available, otherwise falls back to external API URL
+  const getApiBaseUrl = (): string => {
+    return connectedMachine?.urlFor404Api || process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL || "";
   };
 
   const fetchMachines = useCallback(async () => {
@@ -67,7 +74,7 @@ export default function MachinesPage() {
       } else {
         // Fetch from API
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines`,
+          `${getApiBaseUrl()}/machines`,
           {
             method: "GET",
             headers: {
@@ -98,7 +105,7 @@ export default function MachinesPage() {
       setError(err instanceof Error ? err.message : "Failed to fetch machines");
       setLoading(false);
     }
-  }, [token, dispatch]);
+  }, [token, dispatch, connectedMachine]);
 
   useEffect(() => {
     fetchMachines();
@@ -111,8 +118,8 @@ export default function MachinesPage() {
   }) => {
     console.log("Adding machine:", machineData);
 
-    // POST to the new machine's API endpoint to register it
-    const response = await fetch(`${machineData.urlFor404Api}/machines`, {
+    // POST to the connected machine's API endpoint (or fallback) to register the new machine
+    const response = await fetch(`${getApiBaseUrl()}/machines`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -172,7 +179,7 @@ export default function MachinesPage() {
     console.log("Deleting machine:", machineToDelete.id);
 
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines/${machineToDelete.id}`,
+      `${getApiBaseUrl()}/machines/${machineToDelete.id}`,
       {
         method: "DELETE",
         headers: {
@@ -239,7 +246,7 @@ export default function MachinesPage() {
       servicesArray: ServiceConfig[];
     }
   ) => {
-    const requestUrl = `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/machines/${publicId}`;
+    const requestUrl = `${getApiBaseUrl()}/machines/${publicId}`;
     const requestBody = JSON.stringify(updateData);
 
     // Log the full request (only in non-production)
