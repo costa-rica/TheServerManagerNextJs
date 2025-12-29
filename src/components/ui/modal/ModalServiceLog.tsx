@@ -5,12 +5,18 @@ import { useAppSelector } from "@/store/hooks";
 interface ModalServiceLogProps {
 	serviceName: string;
 	onClose: () => void;
+	onError?: (errorData: {
+		code: string;
+		message: string;
+		details?: string | Record<string, unknown> | Array<unknown>;
+		status: number;
+	}) => void;
 }
 
 export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 	serviceName,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	onClose: _onClose,
+	onClose,
+	onError,
 }) => {
 	const [logs, setLogs] = useState<string>("");
 	const [loading, setLoading] = useState<boolean>(true);
@@ -23,7 +29,17 @@ export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 	useEffect(() => {
 		const fetchLogs = async () => {
 			if (!connectedMachine) {
-				setError("No machine connected");
+				if (onError) {
+					onError({
+						code: "NO_MACHINE",
+						message: "No machine connected",
+						details: "Please connect to a machine first",
+						status: 400,
+					});
+					onClose();
+				} else {
+					setError("No machine connected");
+				}
 				setLoading(false);
 				return;
 			}
@@ -44,26 +60,73 @@ export const ModalServiceLog: React.FC<ModalServiceLogProps> = ({
 					}
 				);
 
+				// Try to parse as JSON first to check for error responses
+				let resJson = null;
+				const contentType = response.headers.get("Content-Type");
+
 				if (!response.ok) {
-					const errorData = await response.json().catch(() => null);
-					throw new Error(
-						errorData?.error ||
-							`Failed to fetch logs: ${response.status} ${response.statusText}`
-					);
+					// For error responses, try to parse JSON
+					if (contentType?.includes("application/json")) {
+						resJson = await response.json();
+					}
+
+					// Check if we have a standardized API error response
+					if (resJson?.error && resJson.error.code && resJson.error.message && resJson.error.status) {
+						// Use the onError callback to pass error to parent for ModalErrorResponse
+						if (onError) {
+							onError({
+								code: resJson.error.code,
+								message: resJson.error.message,
+								details: resJson.error.details,
+								status: resJson.error.status,
+							});
+							onClose();
+						} else {
+							setError(resJson.error.message);
+						}
+					} else {
+						// For non-standardized errors
+						const errorMessage = resJson?.error?.message || resJson?.error || `Failed to fetch logs: ${response.status} ${response.statusText}`;
+						if (onError) {
+							onError({
+								code: "FETCH_LOGS_ERROR",
+								message: errorMessage,
+								details: `Service: ${serviceName}`,
+								status: response.status,
+							});
+							onClose();
+						} else {
+							setError(errorMessage);
+						}
+					}
+					setLoading(false);
+					return;
 				}
 
-				// Response is plain text
+				// Success - response is plain text
 				const logText = await response.text();
 				setLogs(logText);
 				setLoading(false);
 			} catch (err) {
-				setError(err instanceof Error ? err.message : "Failed to fetch logs");
+				// Network or parsing errors
+				const errorMessage = err instanceof Error ? err.message : "Failed to fetch logs";
+				if (onError) {
+					onError({
+						code: "NETWORK_ERROR",
+						message: errorMessage,
+						details: "Unable to connect to the server",
+						status: 0,
+					});
+					onClose();
+				} else {
+					setError(errorMessage);
+				}
 				setLoading(false);
 			}
 		};
 
 		fetchLogs();
-	}, [serviceName, token, connectedMachine]);
+	}, [serviceName, token, connectedMachine, onError, onClose]);
 
 	return (
 		<div className="flex flex-col w-[95vw] h-[95vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden">

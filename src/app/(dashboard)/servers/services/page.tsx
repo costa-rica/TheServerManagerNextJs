@@ -5,13 +5,20 @@ import { Service, ServicesResponse } from "@/types/service";
 import { useAppSelector } from "@/store/hooks";
 import { Modal } from "@/components/ui/modal";
 import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
+import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 
 export default function ServicesPage() {
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
 	const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 	const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
+	const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
+	const [apiErrorData, setApiErrorData] = useState<{
+		code: string;
+		message: string;
+		details?: string | Record<string, unknown> | Array<unknown>;
+		status: number;
+	} | null>(null);
 	const token = useAppSelector((state) => state.user.token);
 	const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
 
@@ -23,7 +30,6 @@ export default function ServicesPage() {
 		}
 
 		setLoading(true);
-		setError(null);
 
 		try {
 			const response = await fetch(
@@ -37,25 +43,62 @@ export default function ServicesPage() {
 				}
 			);
 
-			if (!response.ok) {
-				const errorData = await response.json().catch(() => null);
-				throw new Error(
-					errorData?.error ||
-						`Failed to fetch services: ${response.status} ${response.statusText}`
-				);
+			let resJson = null;
+			const contentType = response.headers.get("Content-Type");
+
+			if (contentType?.includes("application/json")) {
+				resJson = await response.json();
 			}
 
-			const data: ServicesResponse = await response.json();
+			if (!response.ok) {
+				// Check if we have a standardized API error response
+				if (resJson?.error && resJson.error.code && resJson.error.message && resJson.error.status) {
+					// Use the new ModalErrorResponse for standardized API errors
+					setApiErrorData({
+						code: resJson.error.code,
+						message: resJson.error.message,
+						details: resJson.error.details,
+						status: resJson.error.status,
+					});
+					setApiErrorModalOpen(true);
+				} else {
+					// For non-standardized errors, create a generic error object for the modal
+					setApiErrorData({
+						code: "FETCH_ERROR",
+						message: resJson?.error?.message || resJson?.error || `Failed to fetch services: ${response.status} ${response.statusText}`,
+						status: response.status,
+					});
+					setApiErrorModalOpen(true);
+				}
+				setLoading(false);
+				return;
+			}
 
-			if (data.servicesStatusArray && Array.isArray(data.servicesStatusArray)) {
-				setServices(data.servicesStatusArray);
+			if (resJson && resJson.servicesStatusArray && Array.isArray(resJson.servicesStatusArray)) {
+				setServices(resJson.servicesStatusArray);
 			} else {
-				throw new Error("Invalid response format from API");
+				// Invalid response format - show error modal
+				setApiErrorData({
+					code: "INVALID_RESPONSE",
+					message: "Invalid response format from API",
+					details: "Expected servicesStatusArray field in response",
+					status: response.status,
+				});
+				setApiErrorModalOpen(true);
+				setLoading(false);
+				return;
 			}
 
 			setLoading(false);
 		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to fetch services");
+			// Network or parsing errors
+			setApiErrorData({
+				code: "NETWORK_ERROR",
+				message: err instanceof Error ? err.message : "Failed to fetch services",
+				details: "Unable to connect to the server or parse the response",
+				status: 0,
+			});
+			setApiErrorModalOpen(true);
 			setLoading(false);
 		}
 	}, [connectedMachine, token]);
@@ -75,7 +118,13 @@ export default function ServicesPage() {
 		serviceName: string
 	) => {
 		if (!connectedMachine) {
-			setError("No machine connected. Please connect to a machine first.");
+			setApiErrorData({
+				code: "NO_MACHINE",
+				message: "No machine connected",
+				details: "Please connect to a machine first",
+				status: 400,
+			});
+			setApiErrorModalOpen(true);
 			return;
 		}
 
@@ -91,24 +140,49 @@ export default function ServicesPage() {
 				}
 			);
 
+			let resJson = null;
+			const contentType = response.headers.get("Content-Type");
+
+			if (contentType?.includes("application/json")) {
+				resJson = await response.json();
+			}
+
 			if (!response.ok) {
-				const errorData = await response.json().catch(() => null);
-				throw new Error(
-					errorData?.error?.message ||
-						errorData?.error ||
-						`Failed to ${toggleStatus} service: ${response.status} ${response.statusText}`
-				);
+				// Check if we have a standardized API error response
+				if (resJson?.error && resJson.error.code && resJson.error.message && resJson.error.status) {
+					// Use the new ModalErrorResponse for standardized API errors
+					setApiErrorData({
+						code: resJson.error.code,
+						message: resJson.error.message,
+						details: resJson.error.details,
+						status: resJson.error.status,
+					});
+					setApiErrorModalOpen(true);
+				} else {
+					// For non-standardized errors, create a generic error object for the modal
+					setApiErrorData({
+						code: "TOGGLE_ERROR",
+						message: resJson?.error?.message || resJson?.error || `Failed to ${toggleStatus} service: ${response.status} ${response.statusText}`,
+						details: `Service: ${serviceName}`,
+						status: response.status,
+					});
+					setApiErrorModalOpen(true);
+				}
+				return;
 			}
 
 			// Refresh services list after successful toggle
 			await fetchServices();
 		} catch (err) {
 			console.error("Error toggling service:", err);
-			setError(
-				err instanceof Error
-					? err.message
-					: `Failed to ${toggleStatus} service ${serviceName}`
-			);
+			// Network or parsing errors
+			setApiErrorData({
+				code: "NETWORK_ERROR",
+				message: err instanceof Error ? err.message : `Failed to ${toggleStatus} service ${serviceName}`,
+				details: "Unable to connect to the server",
+				status: 0,
+			});
+			setApiErrorModalOpen(true);
 		}
 	};
 
@@ -144,15 +218,8 @@ export default function ServicesPage() {
 				</div>
 			)}
 
-			{/* Error State */}
-			{error && !loading && connectedMachine && (
-				<div className="bg-error-50 dark:bg-error-900/20 border border-error-500 rounded-lg p-4">
-					<p className="text-error-700 dark:text-error-400">{error}</p>
-				</div>
-			)}
-
 			{/* Services Table */}
-			{!loading && !error && connectedMachine && (
+			{!loading && connectedMachine && (
 				<TableMachineServices
 					data={services}
 					handleViewLogs={handleViewLogs}
@@ -176,6 +243,29 @@ export default function ServicesPage() {
 						onClose={() => {
 							setIsLogModalOpen(false);
 							setSelectedServiceName(null);
+						}}
+						onError={(errorData) => {
+							setApiErrorData(errorData);
+							setApiErrorModalOpen(true);
+						}}
+					/>
+				</Modal>
+			)}
+
+			{/* API Error Modal */}
+			{apiErrorData && (
+				<Modal
+					isOpen={apiErrorModalOpen}
+					onClose={() => {
+						setApiErrorModalOpen(false);
+						setApiErrorData(null);
+					}}
+				>
+					<ModalErrorResponse
+						error={apiErrorData}
+						onClose={() => {
+							setApiErrorModalOpen(false);
+							setApiErrorData(null);
 						}}
 					/>
 				</Modal>
