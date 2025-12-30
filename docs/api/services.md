@@ -39,8 +39,10 @@ curl --location 'http://localhost:3000/services' \
       "active": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
       "status": "inactive",
       "onStartStatus": "disabled",
+      "timerLoaded": "loaded (/etc/systemd/system/personalweb03-services.timer; enabled; preset: enabled)",
       "timerActive": "active (waiting) since Thu 2025-12-25 19:19:04 UTC; 4min 40s ago",
       "timerStatus": "active",
+      "timerOnStartStatus": "enabled",
       "timerTrigger": "Thu 2025-12-25 23:00:00 UTC; 3h 36min left"
     }
   ]
@@ -58,8 +60,10 @@ curl --location 'http://localhost:3000/services' \
 | `servicesStatusArray[].active` | String | Full "Active:" line from systemctl status (e.g., "active (running) since...", "inactive (dead) since...") |
 | `servicesStatusArray[].status` | String | Simplified status: "active", "inactive", "failed", "activating", "deactivating", or "unknown" |
 | `servicesStatusArray[].onStartStatus` | String | Whether service starts on boot: "enabled", "disabled", "static", or "unknown" (parsed from loaded line) |
+| `servicesStatusArray[].timerLoaded` | String | Full "Loaded:" line from timer's systemctl status (optional, only if filenameTimer configured) |
 | `servicesStatusArray[].timerActive` | String | Full "Active:" line from timer's systemctl status (optional, only if filenameTimer configured) |
 | `servicesStatusArray[].timerStatus` | String | Simplified timer status: "active", "inactive", or "unknown" (optional, only if filenameTimer configured) |
+| `servicesStatusArray[].timerOnStartStatus` | String | Whether timer starts on boot: "enabled", "disabled", "static", or "unknown" (optional, only if filenameTimer configured) |
 | `servicesStatusArray[].timerTrigger` | String | Next trigger time (optional, only if filenameTimer configured) |
 
 **Error Response (400 Bad Request - Not Production):**
@@ -123,8 +127,10 @@ curl --location 'http://localhost:3000/services' \
   - **Status:** Simplified state extracted from Active line (active/inactive/failed/etc.)
   - **onStartStatus:** Parsed from Loaded line to determine if service is enabled/disabled/static
 - If service has `filenameTimer`, also executes `sudo systemctl status {filenameTimer}` and extracts:
+  - **timerLoaded:** Full "Loaded:" line from timer with file path and enabled/disabled state
   - **timerActive:** Full "Active:" line from timer with detailed status and timestamp
   - **timerStatus:** Simplified timer state (active/inactive/etc.)
+  - **timerOnStartStatus:** Whether timer starts on boot (enabled/disabled/static)
   - **timerTrigger:** Next scheduled trigger time
 - Services with errors return all fields as `"unknown"` but don't fail entire request
 - Only works when `NODE_ENV=production` or `NODE_ENV=testing` on Ubuntu servers with systemd
@@ -143,7 +149,7 @@ Control a service by starting, stopping, restarting, or performing other systemc
 
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
-| `serviceFilename` | String | Yes | Service filename (e.g., "personalweb03-api.service") |
+| `serviceFilename` | String | Yes | Service or timer filename (e.g., "personalweb03-api.service" or "personalweb03-services.timer") |
 | `toggleStatus` | String | Yes | Action to perform: start, stop, restart, reload, enable, disable |
 
 **Sample Request:**
@@ -176,8 +182,10 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
   "active": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
   "status": "inactive",
   "onStartStatus": "disabled",
+  "timerLoaded": "loaded (/etc/systemd/system/personalweb03-services.timer; enabled; preset: enabled)",
   "timerActive": "active (waiting) since Thu 2025-12-25 19:19:04 UTC; 4min 40s ago",
   "timerStatus": "active",
+  "timerOnStartStatus": "enabled",
   "timerTrigger": "Thu 2025-12-25 23:00:00 UTC; 3h 36min left"
 }
 ```
@@ -192,8 +200,10 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 | `active` | String | Full "Active:" line from systemctl status after toggle operation |
 | `status` | String | Simplified status: "active", "inactive", "failed", etc. |
 | `onStartStatus` | String | Whether service starts on boot: "enabled", "disabled", "static", or "unknown" |
+| `timerLoaded` | String | Full "Loaded:" line from timer's systemctl status (optional, only if filenameTimer configured) |
 | `timerActive` | String | Full "Active:" line from timer's systemctl status (optional, only if filenameTimer configured) |
 | `timerStatus` | String | Simplified timer status: "active", "inactive", or "unknown" (optional, only if filenameTimer configured) |
+| `timerOnStartStatus` | String | Whether timer starts on boot: "enabled", "disabled", "static", or "unknown" (optional, only if filenameTimer configured) |
 | `timerTrigger` | String | Next trigger time (optional, only if filenameTimer configured) |
 
 **Error Response (400 Bad Request - Not Production):**
@@ -288,15 +298,19 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 
 **Behavior:**
 
-- Validates that `serviceFilename` exists in machine's servicesArray before allowing control
+- Accepts both `.service` and `.timer` filenames in the `serviceFilename` parameter
+- Validates that `serviceFilename` exists in machine's servicesArray (checks both `filename` and `filenameTimer` fields)
+- **Special handling for critical services:** `tsm-api.service` and `tsm-nextjs.service` always execute `restart` when `start`, `stop`, or `restart` is requested (other actions like `enable`, `disable`, `reload` work normally)
 - Executes `sudo systemctl {toggleStatus} {serviceFilename}`
 - Queries updated service status after toggle operation, including:
   - Full "Loaded:" and "Active:" lines from systemctl
   - Simplified status (active/inactive/failed/etc.)
   - Boot-time behavior (enabled/disabled/static)
 - If service has `filenameTimer`, includes timer fields in response:
+  - **timerLoaded:** Full "Loaded:" line from timer
   - **timerActive:** Full "Active:" line from timer
   - **timerStatus:** Simplified timer state (active/inactive/etc.)
+  - **timerOnStartStatus:** Whether timer starts on boot (enabled/disabled/static)
   - **timerTrigger:** Next scheduled trigger time
 - Only works when `NODE_ENV=production` or `NODE_ENV=testing` on Ubuntu servers with systemd
 - Supported actions: start, stop, restart, reload, enable, disable
@@ -321,6 +335,30 @@ POST /services/personalweb03-api.service/restart
 Enable a service to start on boot:
 ```bash
 POST /services/personalweb03-api.service/enable
+```
+
+Start a timer:
+```bash
+POST /services/personalweb03-services.timer/start
+```
+
+Stop a timer:
+```bash
+POST /services/personalweb03-services.timer/stop
+```
+
+**Special handling for critical services (tsm-api.service and tsm-nextjs.service):**
+
+Attempting to stop tsm-api (will execute restart instead):
+```bash
+POST /services/tsm-api.service/stop
+# Automatically converted to: sudo systemctl restart tsm-api.service
+```
+
+Attempting to start tsm-nextjs (will execute restart instead):
+```bash
+POST /services/tsm-nextjs.service/start
+# Automatically converted to: sudo systemctl restart tsm-nextjs.service
 ```
 
 ---
