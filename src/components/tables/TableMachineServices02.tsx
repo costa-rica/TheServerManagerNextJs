@@ -1,6 +1,5 @@
 "use client";
 import React, { useState } from "react";
-import Image from "next/image";
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -313,11 +312,9 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
 							title="Git manager"
 						>
-							<Image
+							<img
 								src="/assets/images/Git-Icon-1788C.png"
 								alt="Git"
-								width={16}
-								height={16}
 								className="w-4 h-4 object-contain block"
 							/>
 						</button>
