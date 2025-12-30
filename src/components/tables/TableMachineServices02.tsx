@@ -205,7 +205,7 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 				// Extract the human-readable part after the semicolon (e.g., "3h 24min left")
 				const getReadableTrigger = () => {
 					if (!hasValidTrigger) return null;
-					const parts = service.timerTrigger.split(";");
+					const parts = service.timerTrigger!.split(";");
 					return parts.length > 1 ? parts[1].trim() : parts[0];
 				};
 
