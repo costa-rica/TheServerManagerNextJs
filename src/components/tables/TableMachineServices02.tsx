@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import {
 	useReactTable,
 	getCoreRowModel,
@@ -20,6 +21,7 @@ import {
 interface TableMachineServices02Props {
 	data: Service[];
 	handleViewLogs: (serviceName: string) => void;
+	handleViewGit: (serviceName: string) => void;
 	handleToggleStatus: (
 		serviceFilename: string,
 		toggleStatus: string,
@@ -30,6 +32,7 @@ interface TableMachineServices02Props {
 export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 	data,
 	handleViewLogs,
+	handleViewGit,
 	handleToggleStatus,
 }) => {
 	const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -304,6 +307,20 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 
 				return (
 					<div className="flex items-center justify-end gap-2">
+						<button
+							type="button"
+							onClick={() => handleViewGit(service.name)}
+							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+							title="Git manager"
+						>
+							<Image
+								src="/assets/images/Git-Icon-1788C.png"
+								alt="Git"
+								width={16}
+								height={16}
+								className="w-4 h-4"
+							/>
+						</button>
 						<button
 							type="button"
 							onClick={() => handleViewLogs(service.name)}

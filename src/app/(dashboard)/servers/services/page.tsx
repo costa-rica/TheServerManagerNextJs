@@ -6,12 +6,14 @@ import { Service, ServicesResponse } from "@/types/service";
 import { useAppSelector } from "@/store/hooks";
 import { Modal } from "@/components/ui/modal";
 import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
+import { ModalServiceGitManager } from "@/components/ui/modal/ModalServiceGitManager";
 import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 
 export default function ServicesPage() {
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [isLogModalOpen, setIsLogModalOpen] = useState(false);
+	const [isGitModalOpen, setIsGitModalOpen] = useState(false);
 	const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
 	const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
 	const [apiErrorData, setApiErrorData] = useState<{
@@ -111,6 +113,11 @@ export default function ServicesPage() {
 	const handleViewLogs = (serviceName: string) => {
 		setSelectedServiceName(serviceName);
 		setIsLogModalOpen(true);
+	};
+
+	const handleViewGit = (serviceName: string) => {
+		setSelectedServiceName(serviceName);
+		setIsGitModalOpen(true);
 	};
 
 	const handleToggleStatus = async (
@@ -224,6 +231,7 @@ export default function ServicesPage() {
 				<TableMachineServices02
 					data={services}
 					handleViewLogs={handleViewLogs}
+					handleViewGit={handleViewGit}
 					handleToggleStatus={handleToggleStatus}
 				/>
 			)}
@@ -248,6 +256,35 @@ export default function ServicesPage() {
 						onError={(errorData) => {
 							setApiErrorData(errorData);
 							setApiErrorModalOpen(true);
+						}}
+					/>
+				</Modal>
+			)}
+
+			{/* Git Manager Modal */}
+			{selectedServiceName && (
+				<Modal
+					isOpen={isGitModalOpen}
+					onClose={() => {
+						setIsGitModalOpen(false);
+						setSelectedServiceName(null);
+					}}
+					showCloseButton={true}
+				>
+					<ModalServiceGitManager
+						serviceName={selectedServiceName}
+						onClose={() => {
+							setIsGitModalOpen(false);
+							setSelectedServiceName(null);
+						}}
+						onError={(errorData) => {
+							setIsGitModalOpen(false);
+							setApiErrorData(errorData);
+							setApiErrorModalOpen(true);
+						}}
+						onSuccess={() => {
+							// Optionally refresh services after git actions
+							fetchServices();
 						}}
 					/>
 				</Modal>
