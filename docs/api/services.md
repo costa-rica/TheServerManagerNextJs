@@ -27,12 +27,18 @@ curl --location 'http://localhost:3000/services' \
     {
       "name": "PersonalWeb03 API",
       "filename": "personalweb03-api.service",
-      "status": "active (running) since Thu 2025-12-25 10:30:00 UTC; 2h ago"
+      "loaded": "loaded (/etc/systemd/system/personalweb03-api.service; enabled; preset: enabled)",
+      "active": "active (running) since Thu 2025-12-25 10:30:00 UTC; 2h ago",
+      "status": "active",
+      "onStartStatus": "enabled"
     },
     {
       "name": "PersonalWeb03 Services",
       "filename": "personalweb03-services.service",
-      "status": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
+      "loaded": "loaded (/etc/systemd/system/personalweb03-services.service; disabled; preset: enabled)",
+      "active": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
+      "status": "inactive",
+      "onStartStatus": "disabled",
       "timerStatus": "active (waiting) since Thu 2025-12-25 19:19:04 UTC; 4min 40s ago",
       "timerTrigger": "Thu 2025-12-25 23:00:00 UTC; 3h 36min left"
     }
@@ -42,14 +48,17 @@ curl --location 'http://localhost:3000/services' \
 
 **Response Fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `servicesStatusArray` | Object[] | Array of service status objects |
-| `servicesStatusArray[].name` | String | Human-readable service name from servicesArray |
-| `servicesStatusArray[].filename` | String | Systemd service filename |
-| `servicesStatusArray[].status` | String | Active status from systemctl (e.g., "active (running)", "inactive (dead)", "failed") |
-| `servicesStatusArray[].timerStatus` | String | Active status of timer (optional, only if filenameTimer configured) |
-| `servicesStatusArray[].timerTrigger` | String | Next trigger time (optional, only if filenameTimer configured) |
+| Field                                 | Type     | Description                                                                                               |
+| ------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------- |
+| `servicesStatusArray`                 | Object[] | Array of service status objects                                                                           |
+| `servicesStatusArray[].name`          | String   | Human-readable service name from servicesArray                                                            |
+| `servicesStatusArray[].filename`      | String   | Systemd service filename                                                                                  |
+| `servicesStatusArray[].loaded`        | String   | Full "Loaded:" line from systemctl status showing file path and enabled/disabled state                    |
+| `servicesStatusArray[].active`        | String   | Full "Active:" line from systemctl status (e.g., "active (running) since...", "inactive (dead) since...") |
+| `servicesStatusArray[].status`        | String   | Simplified status: "active", "inactive", "failed", "activating", "deactivating", or "unknown"             |
+| `servicesStatusArray[].onStartStatus` | String   | Whether service starts on boot: "enabled", "disabled", "static", or "unknown" (parsed from loaded line)   |
+| `servicesStatusArray[].timerStatus`   | String   | Active status of timer (optional, only if filenameTimer configured)                                       |
+| `servicesStatusArray[].timerTrigger`  | String   | Next trigger time (optional, only if filenameTimer configured)                                            |
 
 **Error Response (400 Bad Request - Not Production):**
 
@@ -106,10 +115,14 @@ curl --location 'http://localhost:3000/services' \
 
 - Retrieves machine's servicesArray using OS hostname from `getMachineInfo()`
 - Executes `sudo systemctl status {filename}` for each service
+- Parses systemctl output to extract multiple fields:
+  - **Loaded:** Full "Loaded:" line containing file path and enabled/disabled state
+  - **Active:** Full "Active:" line with detailed status and timestamp
+  - **Status:** Simplified state extracted from Active line (active/inactive/failed/etc.)
+  - **onStartStatus:** Parsed from Loaded line to determine if service is enabled/disabled/static
 - If service has `filenameTimer`, also executes `sudo systemctl status {filenameTimer}`
-- Parses systemctl output to extract "Active:" and "Trigger:" fields
-- Services with errors return `status: "unknown"` but don't fail entire request
-- Only works when `NODE_ENV=production` on Ubuntu servers with systemd
+- Services with errors return all fields as `"unknown"` but don't fail entire request
+- Only works when `NODE_ENV=production` or `NODE_ENV=testing` on Ubuntu servers with systemd
 
 ---
 
@@ -123,10 +136,10 @@ Control a service by starting, stopping, restarting, or performing other systemc
 
 **URL Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `serviceFilename` | String | Yes | Service filename (e.g., "personalweb03-api.service") |
-| `toggleStatus` | String | Yes | Action to perform: start, stop, restart, reload, enable, disable |
+| Parameter         | Type   | Required | Description                                                      |
+| ----------------- | ------ | -------- | ---------------------------------------------------------------- |
+| `serviceFilename` | String | Yes      | Service filename (e.g., "personalweb03-api.service")             |
+| `toggleStatus`    | String | Yes      | Action to perform: start, stop, restart, reload, enable, disable |
 
 **Sample Request:**
 
@@ -141,7 +154,10 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 {
   "name": "PersonalWeb03 API",
   "filename": "personalweb03-api.service",
-  "status": "active (running) since Thu 2025-12-26 14:22:00 UTC; 2s ago"
+  "loaded": "loaded (/etc/systemd/system/personalweb03-api.service; enabled; preset: enabled)",
+  "active": "active (running) since Thu 2025-12-26 14:22:00 UTC; 2s ago",
+  "status": "active",
+  "onStartStatus": "enabled"
 }
 ```
 
@@ -151,7 +167,10 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 {
   "name": "PersonalWeb03 Services",
   "filename": "personalweb03-services.service",
-  "status": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
+  "loaded": "loaded (/etc/systemd/system/personalweb03-services.service; disabled; preset: enabled)",
+  "active": "inactive (dead) since Thu 2025-12-25 19:19:14 UTC; 5min ago",
+  "status": "inactive",
+  "onStartStatus": "disabled",
   "timerStatus": "active (waiting) since Thu 2025-12-25 19:19:04 UTC; 4min 40s ago",
   "timerTrigger": "Thu 2025-12-25 23:00:00 UTC; 3h 36min left"
 }
@@ -159,13 +178,16 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 
 **Response Fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | String | Human-readable service name from servicesArray |
-| `filename` | String | Systemd service filename |
-| `status` | String | Active status after toggle operation |
-| `timerStatus` | String | Active status of timer (optional, only if filenameTimer configured) |
-| `timerTrigger` | String | Next trigger time (optional, only if filenameTimer configured) |
+| Field           | Type   | Description                                                                            |
+| --------------- | ------ | -------------------------------------------------------------------------------------- |
+| `name`          | String | Human-readable service name from servicesArray                                         |
+| `filename`      | String | Systemd service filename                                                               |
+| `loaded`        | String | Full "Loaded:" line from systemctl status showing file path and enabled/disabled state |
+| `active`        | String | Full "Active:" line from systemctl status after toggle operation                       |
+| `status`        | String | Simplified status: "active", "inactive", "failed", etc.                                |
+| `onStartStatus` | String | Whether service starts on boot: "enabled", "disabled", "static", or "unknown"          |
+| `timerStatus`   | String | Active status of timer (optional, only if filenameTimer configured)                    |
+| `timerTrigger`  | String | Next trigger time (optional, only if filenameTimer configured)                         |
 
 **Error Response (400 Bad Request - Not Production):**
 
@@ -261,29 +283,36 @@ curl --location --request POST 'http://localhost:3000/services/personalweb03-api
 
 - Validates that `serviceFilename` exists in machine's servicesArray before allowing control
 - Executes `sudo systemctl {toggleStatus} {serviceFilename}`
-- Queries updated service status after toggle operation
+- Queries updated service status after toggle operation, including:
+  - Full "Loaded:" and "Active:" lines from systemctl
+  - Simplified status (active/inactive/failed/etc.)
+  - Boot-time behavior (enabled/disabled/static)
 - If service has `filenameTimer`, includes timer status/trigger in response
-- Only works when `NODE_ENV=production` on Ubuntu servers with systemd
+- Only works when `NODE_ENV=production` or `NODE_ENV=testing` on Ubuntu servers with systemd
 - Supported actions: start, stop, restart, reload, enable, disable
 
 **Examples:**
 
 Start a service:
+
 ```bash
 POST /services/personalweb03-api.service/start
 ```
 
 Stop a service:
+
 ```bash
 POST /services/personalweb03-api.service/stop
 ```
 
 Restart a service:
+
 ```bash
 POST /services/personalweb03-api.service/restart
 ```
 
 Enable a service to start on boot:
+
 ```bash
 POST /services/personalweb03-api.service/enable
 ```
@@ -300,9 +329,9 @@ Retrieve the log file for a specific service.
 
 **URL Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `name` | String | Yes | Service name (matches the `name` field in servicesArray) |
+| Parameter | Type   | Required | Description                                              |
+| --------- | ------ | -------- | -------------------------------------------------------- |
+| `name`    | String | Yes      | Service name (matches the `name` field in servicesArray) |
 
 **Sample Request:**
 

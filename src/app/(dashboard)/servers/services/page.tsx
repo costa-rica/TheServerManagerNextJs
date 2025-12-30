@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import TableMachineServices from "@/components/tables/TableMachineServices";
+import TableMachineServices02 from "@/components/tables/TableMachineServices02";
 import { Service, ServicesResponse } from "@/types/service";
 import { useAppSelector } from "@/store/hooks";
 import { Modal } from "@/components/ui/modal";
@@ -220,7 +221,7 @@ export default function ServicesPage() {
 
 			{/* Services Table */}
 			{!loading && connectedMachine && (
-				<TableMachineServices
+				<TableMachineServices02
 					data={services}
 					handleViewLogs={handleViewLogs}
 					handleToggleStatus={handleToggleStatus}
