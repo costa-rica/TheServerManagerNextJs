@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { SidebarProvider } from "@/context/SidebarContext";
+import { LoadingProvider } from "@/context/LoadingContext";
 import { JetBrains_Mono } from "next/font/google";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -28,7 +29,9 @@ export default function RootLayout({
 				<Providers>
 					{" "}
 					<ThemeProvider>
-						<SidebarProvider>{children}</SidebarProvider>
+						<LoadingProvider>
+							<SidebarProvider>{children}</SidebarProvider>
+						</LoadingProvider>
 					</ThemeProvider>
 				</Providers>
 			</body>
