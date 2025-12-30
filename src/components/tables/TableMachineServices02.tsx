@@ -199,7 +199,15 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 					return <span className="hidden md:block text-xs text-gray-400 dark:text-gray-600">-</span>;
 				}
 
-				const timerRunning = service.timerStatus.includes("active");
+				const timerRunning = service.timerStatus === "active";
+				const hasValidTrigger = service.timerTrigger && service.timerTrigger !== "n/a";
+
+				// Extract the human-readable part after the semicolon (e.g., "3h 24min left")
+				const getReadableTrigger = () => {
+					if (!hasValidTrigger) return null;
+					const parts = service.timerTrigger.split(";");
+					return parts.length > 1 ? parts[1].trim() : parts[0];
+				};
 
 				return (
 					<div className="hidden lg:block">
@@ -213,9 +221,9 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 								{timerRunning ? "Active" : "Inactive"}
 							</span>
 						</div>
-						{service.timerTrigger && (
+						{hasValidTrigger && (
 							<div className="text-xs text-gray-500 dark:text-gray-400 truncate" title={service.timerTrigger}>
-								Next: {service.timerTrigger.split(";")[0]}
+								{getReadableTrigger()}
 							</div>
 						)}
 					</div>
@@ -232,7 +240,7 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 				}
 
 				const timerFilename = service.filename.replace(".service", ".timer");
-				const timerRunning = service.timerStatus.includes("active");
+				const timerRunning = service.timerStatus === "active";
 				const timerEnabled = service.timerOnStartStatus === "enabled";
 
 				return (
@@ -443,18 +451,20 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 																<div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
 																	<div
 																		className={`w-2 h-2 rounded-full ${
-																			service.timerStatus?.includes("active")
+																			service.timerStatus === "active"
 																				? "bg-info-500"
 																				: "bg-gray-400"
 																		}`}
 																	/>
 																	<span>
-																		{service.timerStatus?.includes("active") ? "Active" : "Inactive"}
+																		{service.timerStatus === "active" ? "Active" : "Inactive"}
 																	</span>
 																</div>
-																{service.timerTrigger && (
+																{service.timerTrigger && service.timerTrigger !== "n/a" && (
 																	<div className="text-xs text-gray-500 dark:text-gray-400">
-																		Next: {service.timerTrigger}
+																		{service.timerTrigger.split(";").length > 1
+																			? service.timerTrigger.split(";")[1].trim()
+																			: service.timerTrigger}
 																	</div>
 																)}
 																<div className="flex gap-2">
@@ -467,22 +477,22 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 																			);
 																			handleToggle(
 																				timerFilename,
-																				service.timerStatus?.includes("active") ? "stop" : "start",
+																				service.timerStatus === "active" ? "stop" : "start",
 																				service.name
 																			);
 																		}}
 																		disabled={isToggleLoading(
 																			service.name,
-																			`timer-${service.timerStatus?.includes("active") ? "stop" : "start"}`
+																			`timer-${service.timerStatus === "active" ? "stop" : "start"}`
 																		)}
 																		className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-medium transition-colors disabled:opacity-50 ${
-																			service.timerStatus?.includes("active")
+																			service.timerStatus === "active"
 																				? "bg-error-100 dark:bg-error-900/30 text-error-700 dark:text-error-400"
 																				: "bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400"
 																		}`}
 																	>
 																		<TimeIcon className="w-3.5 h-3.5" />
-																		{service.timerStatus?.includes("active") ? "Stop" : "Start"}
+																		{service.timerStatus === "active" ? "Stop" : "Start"}
 																	</button>
 
 																	<button
