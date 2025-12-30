@@ -408,6 +408,7 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
 											<div className="divide-y divide-gray-200 dark:divide-gray-700">
 												{branches.map((branch) => {
 													const isCurrentBranch = branch === currentBranch;
+													const isProtectedBranch = branch === "main" || branch === "master";
 
 													return (
 														<div
@@ -447,7 +448,7 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
 																)}
 															</button>
 
-															{!isCurrentBranch && (
+															{!isCurrentBranch && !isProtectedBranch && (
 																<button
 																	type="button"
 																	onClick={() => confirmDeleteBranch(branch)}

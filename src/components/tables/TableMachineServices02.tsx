@@ -318,7 +318,7 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 								alt="Git"
 								width={16}
 								height={16}
-								className="w-4 h-4"
+								className="w-4 h-4 object-contain block"
 							/>
 						</button>
 						<button
