@@ -41,8 +41,8 @@ export const LoadingOverlay: React.FC<LoadingOverlayProps> = ({
 
 	const containerClasses =
 		size === "fullscreen"
-			? "fixed inset-0 z-[9999]"
-			: "absolute inset-0 z-50";
+			? "fixed inset-0 z-[999999]"
+			: "absolute inset-0 z-[999999]";
 
 	return (
 		<div
