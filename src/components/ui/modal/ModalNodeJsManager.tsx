@@ -252,7 +252,7 @@ export const ModalNodeJsManager: React.FC<ModalNodeJsManagerProps> = ({
               <button
                 type="button"
                 onClick={() => handleNpmAction("install")}
-                className="flex items-center gap-2 px-4 py-2 bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400 hover:bg-info-200 dark:hover:bg-info-900/50 rounded-lg font-medium transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors text-sm"
               >
                 <span>Install</span>
               </button>
