@@ -24,7 +24,7 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [urlApiForTsmNetwork, setUrlFor404Api] = useState(
+  const [urlApiForTsmNetwork, setUrlApiForTsmNetwork] = useState(
     machine.urlApiForTsmNetwork || ""
   );
   const [nginxPaths, setNginxPaths] = useState<string[]>(
@@ -264,7 +264,7 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
             type="text"
             id="urlApiForTsmNetwork"
             value={urlApiForTsmNetwork}
-            onChange={(e) => setUrlFor404Api(e.target.value)}
+            onChange={(e) => setUrlApiForTsmNetwork(e.target.value)}
             placeholder="e.g., https://maestro03.the404api.dashanddata.com"
             className="w-full px-4 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
           />

@@ -2,6 +2,8 @@
 import React, { useState } from "react";
 import { ChevronDownIcon } from "@/icons";
 import { ServiceConfig } from "@/types/machine";
+import { Modal } from "@/components/ui/modal";
+import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
 interface ModalMachineAddProps {
   onClose: () => void;
@@ -16,10 +18,10 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [urlApiForTsmNetwork, setUrlFor404Api] = useState("");
+  const [urlApiForTsmNetwork, setUrlApiForTsmNetwork] = useState("");
   const [nginxPaths, setNginxPaths] = useState<string[]>([
     "/etc/nginx/sites-available",
-    "/etc/nginx/conf.d",
+    "/home/nick",
   ]);
   const [isNginxPathsExpanded, setIsNginxPathsExpanded] = useState(false);
   const [services, setServices] = useState<ServiceConfig[]>([
@@ -32,6 +34,8 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
     },
   ]);
   const [expandedServices, setExpandedServices] = useState<boolean[]>([true]); // First service expanded by default
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorModal, setErrorModal] = useState({ title: "", message: "" });
 
   const handleAddPath = () => {
     setNginxPaths([...nginxPaths, ""]);
@@ -95,6 +99,12 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
 
     // Validation
     if (!urlApiForTsmNetwork.trim()) {
+      setErrorModal({
+        title: "API URL Required",
+        message:
+          "Please enter an API URL for the machine on the TSM network.",
+      });
+      setShowErrorModal(true);
       return;
     }
 
@@ -157,8 +167,8 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
             type="text"
             id="urlApiForTsmNetwork"
             value={urlApiForTsmNetwork}
-            onChange={(e) => setUrlFor404Api(e.target.value)}
-            placeholder="e.g., https://maestro03.the404api.dashanddata.com"
+            onChange={(e) => setUrlApiForTsmNetwork(e.target.value)}
+            placeholder="e.g., https://tsm-api.maestro06.dashanddata.com"
             className="w-full px-4 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
           />
         </div>
@@ -356,6 +366,16 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
           </button>
         </div>
       </form>
+
+      {/* Error Modal */}
+      <Modal isOpen={showErrorModal} onClose={() => setShowErrorModal(false)}>
+        <ModalInformationOk
+          title={errorModal.title}
+          message={errorModal.message}
+          onClose={() => setShowErrorModal(false)}
+          variant="error"
+        />
+      </Modal>
     </div>
   );
 };

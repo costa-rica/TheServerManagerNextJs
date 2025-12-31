@@ -121,8 +121,8 @@ export default function MachinesPage() {
   }) => {
     console.log("Adding machine:", machineData);
 
-    // POST to the connected machine's API endpoint (or fallback) to register the new machine
-    const response = await fetch(`${getApiBaseUrl()}/machines`, {
+    // POST to the new machine's API endpoint to register itself
+    const response = await fetch(`${machineData.urlApiForTsmNetwork}/machines`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
