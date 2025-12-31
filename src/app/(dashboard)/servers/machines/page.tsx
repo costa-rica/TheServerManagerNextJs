@@ -43,7 +43,9 @@ export default function MachinesPage() {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.user.token);
-  const connectedMachine = useAppSelector((state) => state.machine.connectedMachine);
+  const connectedMachine = useAppSelector(
+    (state) => state.machine.connectedMachine
+  );
 
   const showInfoModal = (
     title: string,
@@ -57,7 +59,11 @@ export default function MachinesPage() {
   // Helper function to get the API base URL
   // Uses connected machine's URL if available, otherwise falls back to external API URL
   const getApiBaseUrl = (): string => {
-    return connectedMachine?.urlFor404Api || process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL || "";
+    return (
+      connectedMachine?.urlApiForTsmNetwork ||
+      process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL ||
+      ""
+    );
   };
 
   const fetchMachines = useCallback(async () => {
@@ -73,16 +79,13 @@ export default function MachinesPage() {
         setLoading(false);
       } else {
         // Fetch from API
-        const response = await fetch(
-          `${getApiBaseUrl()}/machines`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+        const response = await fetch(`${getApiBaseUrl()}/machines`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
         if (!response.ok) {
           throw new Error(
@@ -112,7 +115,7 @@ export default function MachinesPage() {
   }, [fetchMachines]);
 
   const handleAddMachine = async (machineData: {
-    urlFor404Api: string;
+    urlApiForTsmNetwork: string;
     nginxStoragePathOptions: string[];
     servicesArray: ServiceConfig[];
   }) => {
@@ -155,7 +158,9 @@ export default function MachinesPage() {
       }
     } else {
       let errorMessage =
-        resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+        resJson?.error?.message ||
+        resJson?.error ||
+        `There was a server error: ${response.status}`;
 
       // Append details if available
       if (resJson?.error?.details) {
@@ -220,7 +225,9 @@ export default function MachinesPage() {
       }
     } else {
       let errorMessage =
-        resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+        resJson?.error?.message ||
+        resJson?.error ||
+        `There was a server error: ${response.status}`;
 
       // Append details if available
       if (resJson?.error?.details) {
@@ -241,7 +248,7 @@ export default function MachinesPage() {
   const handleEditMachineSubmit = async (
     publicId: string,
     updateData: {
-      urlFor404Api: string;
+      urlApiForTsmNetwork: string;
       nginxStoragePathOptions: string[];
       servicesArray: ServiceConfig[];
     }
@@ -318,7 +325,12 @@ export default function MachinesPage() {
       }
     } else {
       // Check if we have a standardized API error response
-      if (resJson?.error && resJson.error.code && resJson.error.message && resJson.error.status) {
+      if (
+        resJson?.error &&
+        resJson.error.code &&
+        resJson.error.message &&
+        resJson.error.status
+      ) {
         // Use the new ModalErrorResponse for standardized API errors
         setApiErrorData({
           code: resJson.error.code,
@@ -332,7 +344,9 @@ export default function MachinesPage() {
       } else {
         // Fallback to the old info modal for non-standardized errors
         const errorMessage =
-          resJson?.error?.message || resJson?.error || `There was a server error: ${response.status}`;
+          resJson?.error?.message ||
+          resJson?.error ||
+          `There was a server error: ${response.status}`;
         setEditModalOpen(false);
         setMachineToEdit(null);
         showInfoModal("Error", errorMessage, "error");

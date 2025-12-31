@@ -96,10 +96,10 @@ curl --location 'http://localhost:3000/machines/check-nick-systemctl' \
 
 **Response Fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `servicesArray[].filename` | String | Service filename from CSV (always ends with `.service`) |
-| `servicesArray[].port` | Number | Port number extracted from service file (optional, only if found) |
+| Field                           | Type   | Description                                                               |
+| ------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `servicesArray[].filename`      | String | Service filename from CSV (always ends with `.service`)                   |
+| `servicesArray[].port`          | Number | Port number extracted from service file (optional, only if found)         |
 | `servicesArray[].filenameTimer` | String | Associated timer filename (optional, only if `.timer` file exists in CSV) |
 
 **Error Response (404 Not Found - CSV File Missing):**
@@ -228,7 +228,7 @@ curl --location 'http://localhost:3000/machines' \
       "_id": "507f1f77bcf86cd799439011",
       "publicId": "a3f2b1c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
       "machineName": "ubuntu-server-01",
-      "urlFor404Api": "http://192.168.1.100:8000",
+      "urlApiForTsmNetwork": "http://192.168.1.100:8000",
       "localIpAddress": "192.168.1.100",
       "nginxStoragePathOptions": ["/var/www", "/home/user/sites"],
       "servicesArray": [
@@ -257,24 +257,24 @@ Register a new machine in the system.
 
 **Request Body Fields:**
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `urlFor404Api` | String | Yes | URL for the 404 API endpoint |
-| `nginxStoragePathOptions` | String[] | Yes | Array of nginx storage paths |
-| `servicesArray` | Object[] | No | Array of systemd service configurations |
-| `servicesArray[].filename` | String | Yes* | Systemd service filename (e.g., "app.service") |
-| `servicesArray[].pathToLogs` | String | Yes* | Path to service log directory |
-| `servicesArray[].filenameTimer` | String | No | Systemd timer filename if applicable |
-| `servicesArray[].port` | Number | No | Port number the service runs on |
+| Field                           | Type     | Required | Description                                    |
+| ------------------------------- | -------- | -------- | ---------------------------------------------- |
+| `urlApiForTsmNetwork`           | String   | Yes      | URL for the 404 API endpoint                   |
+| `nginxStoragePathOptions`       | String[] | Yes      | Array of nginx storage paths                   |
+| `servicesArray`                 | Object[] | No       | Array of systemd service configurations        |
+| `servicesArray[].filename`      | String   | Yes\*    | Systemd service filename (e.g., "app.service") |
+| `servicesArray[].pathToLogs`    | String   | Yes\*    | Path to service log directory                  |
+| `servicesArray[].filenameTimer` | String   | No       | Systemd timer filename if applicable           |
+| `servicesArray[].port`          | Number   | No       | Port number the service runs on                |
 
-*Required if `servicesArray` is provided
+\*Required if `servicesArray` is provided
 
 **Auto-Populated Fields (per service):**
 
-| Field | Source | Description |
-|-------|--------|-------------|
-| `servicesArray[].name` | NAME_APP from .env | Extracted from NAME_APP variable in .env file located in WorkingDirectory |
-| `servicesArray[].workingDirectory` | Service file | Extracted from WorkingDirectory property in /etc/systemd/system/{filename} |
+| Field                              | Source             | Description                                                                |
+| ---------------------------------- | ------------------ | -------------------------------------------------------------------------- |
+| `servicesArray[].name`             | NAME_APP from .env | Extracted from NAME_APP variable in .env file located in WorkingDirectory  |
+| `servicesArray[].workingDirectory` | Service file       | Extracted from WorkingDirectory property in /etc/systemd/system/{filename} |
 
 **Sample Request:**
 
@@ -283,7 +283,7 @@ curl --location 'http://localhost:3000/machines' \
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
 --data-raw '{
-  "urlFor404Api": "http://192.168.1.100:8000",
+  "urlApiForTsmNetwork": "http://192.168.1.100:8000",
   "nginxStoragePathOptions": ["/var/www", "/home/user/sites"],
   "servicesArray": [
     {
@@ -305,7 +305,7 @@ curl --location 'http://localhost:3000/machines' \
     "publicId": "a3f2b1c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
     "id": "507f1f77bcf86cd799439011",
     "machineName": "ubuntu-server-01",
-    "urlFor404Api": "http://192.168.1.100:8000",
+    "urlApiForTsmNetwork": "http://192.168.1.100:8000",
     "localIpAddress": "192.168.1.100",
     "nginxStoragePathOptions": ["/var/www", "/home/user/sites"],
     "servicesArray": [
@@ -331,7 +331,7 @@ curl --location 'http://localhost:3000/machines' \
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Request validation failed",
-    "details": "Missing required fields: urlFor404Api, nginxStoragePathOptions",
+    "details": "Missing required fields: urlApiForTsmNetwork, nginxStoragePathOptions",
     "status": 400
   }
 }
@@ -451,21 +451,21 @@ Update an existing machine's configuration (partial update).
 
 **URL Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `publicId` | String | Yes | Public ID of the machine to update |
+| Parameter  | Type   | Required | Description                        |
+| ---------- | ------ | -------- | ---------------------------------- |
+| `publicId` | String | Yes      | Public ID of the machine to update |
 
 **Request Body Fields (all optional, at least one required):**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `urlFor404Api` | String | URL for the 404 API endpoint |
-| `nginxStoragePathOptions` | String[] | Array of nginx storage paths |
-| `servicesArray` | Object[] | Array of systemd service configurations (see POST for field details) |
-| `servicesArray[].filename` | String | Systemd service filename (e.g., "app.service") |
-| `servicesArray[].pathToLogs` | String | Path to service log directory |
-| `servicesArray[].filenameTimer` | String | Systemd timer filename if applicable (optional) |
-| `servicesArray[].port` | Number | Port number the service runs on (optional) |
+| Field                           | Type     | Description                                                          |
+| ------------------------------- | -------- | -------------------------------------------------------------------- |
+| `urlApiForTsmNetwork`           | String   | URL for the 404 API endpoint                                         |
+| `nginxStoragePathOptions`       | String[] | Array of nginx storage paths                                         |
+| `servicesArray`                 | Object[] | Array of systemd service configurations (see POST for field details) |
+| `servicesArray[].filename`      | String   | Systemd service filename (e.g., "app.service")                       |
+| `servicesArray[].pathToLogs`    | String   | Path to service log directory                                        |
+| `servicesArray[].filenameTimer` | String   | Systemd timer filename if applicable (optional)                      |
+| `servicesArray[].port`          | Number   | Port number the service runs on (optional)                           |
 
 **Note:** `servicesArray[].name` and `servicesArray[].workingDirectory` are auto-populated from service file validation (same as POST)
 
@@ -476,7 +476,7 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 --header 'Content-Type: application/json' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
 --data-raw '{
-  "urlFor404Api": "http://192.168.1.100:8080",
+  "urlApiForTsmNetwork": "http://192.168.1.100:8080",
   "nginxStoragePathOptions": ["/var/www", "/home/user/sites", "/etc/nginx/sites-available"]
 }'
 ```
@@ -490,9 +490,13 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
     "publicId": "a3f2b1c4-5d6e-7f8a-9b0c-1d2e3f4a5b6c",
     "id": "507f1f77bcf86cd799439011",
     "machineName": "ubuntu-server-01",
-    "urlFor404Api": "http://192.168.1.100:8080",
+    "urlApiForTsmNetwork": "http://192.168.1.100:8080",
     "localIpAddress": "192.168.1.100",
-    "nginxStoragePathOptions": ["/var/www", "/home/user/sites", "/etc/nginx/sites-available"],
+    "nginxStoragePathOptions": [
+      "/var/www",
+      "/home/user/sites",
+      "/etc/nginx/sites-available"
+    ],
     "servicesArray": [
       {
         "name": "PersonalWeb03 API",
@@ -529,7 +533,7 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
   "error": {
     "code": "VALIDATION_ERROR",
     "message": "Request validation failed",
-    "details": "At least one field must be provided for update (urlFor404Api, nginxStoragePathOptions, or servicesArray)",
+    "details": "At least one field must be provided for update (urlApiForTsmNetwork, nginxStoragePathOptions, or servicesArray)",
     "status": 400
   }
 }
@@ -582,9 +586,9 @@ Delete a machine from the system.
 
 **URL Parameters:**
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `publicId` | String | Yes | Public ID of the machine to delete |
+| Parameter  | Type   | Required | Description                        |
+| ---------- | ------ | -------- | ---------------------------------- |
+| `publicId` | String | Yes      | Public ID of the machine to delete |
 
 **Sample Request:**
 

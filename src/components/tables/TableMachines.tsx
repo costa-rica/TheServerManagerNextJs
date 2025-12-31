@@ -27,7 +27,7 @@ const machineFilterFn: FilterFn<Machine> = (row, columnId, filterValue) => {
 
   return (
     machine.machineName?.toLowerCase().includes(searchValue) ||
-    machine.urlFor404Api?.toLowerCase().includes(searchValue) ||
+    machine.urlApiForTsmNetwork?.toLowerCase().includes(searchValue) ||
     machine.localIpAddress?.toLowerCase().includes(searchValue)
   );
 };
@@ -64,7 +64,7 @@ export default function TableMachines({
               {info.getValue() as string}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              {info.row.original.urlFor404Api}
+              {info.row.original.urlApiForTsmNetwork}
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
               {info.row.original.localIpAddress}

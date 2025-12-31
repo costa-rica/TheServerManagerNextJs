@@ -6,7 +6,7 @@ import { ServiceConfig } from "@/types/machine";
 interface ModalMachineAddProps {
   onClose: () => void;
   onSubmit: (machineData: {
-    urlFor404Api: string;
+    urlApiForTsmNetwork: string;
     nginxStoragePathOptions: string[];
     servicesArray: ServiceConfig[];
   }) => void;
@@ -16,7 +16,7 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [urlFor404Api, setUrlFor404Api] = useState("");
+  const [urlApiForTsmNetwork, setUrlFor404Api] = useState("");
   const [nginxPaths, setNginxPaths] = useState<string[]>([
     "/etc/nginx/sites-available",
     "/etc/nginx/conf.d",
@@ -94,12 +94,12 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
     e.preventDefault();
 
     // Validation
-    if (!urlFor404Api.trim()) {
+    if (!urlApiForTsmNetwork.trim()) {
       return;
     }
 
     // Ensure URL has protocol (add https:// if missing)
-    let apiUrl = urlFor404Api.trim();
+    let apiUrl = urlApiForTsmNetwork.trim();
     if (!apiUrl.startsWith("http://") && !apiUrl.startsWith("https://")) {
       apiUrl = `https://${apiUrl}`;
     }
@@ -125,7 +125,7 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
       }));
 
     onSubmit({
-      urlFor404Api: apiUrl,
+      urlApiForTsmNetwork: apiUrl,
       nginxStoragePathOptions: filteredPaths,
       servicesArray: filteredServices,
     });
@@ -148,15 +148,15 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
         {/* API URL */}
         <div>
           <label
-            htmlFor="urlFor404Api"
+            htmlFor="urlApiForTsmNetwork"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
           >
             API URL <span className="text-error-500">*</span>
           </label>
           <input
             type="text"
-            id="urlFor404Api"
-            value={urlFor404Api}
+            id="urlApiForTsmNetwork"
+            value={urlApiForTsmNetwork}
             onChange={(e) => setUrlFor404Api(e.target.value)}
             placeholder="e.g., https://maestro03.the404api.dashanddata.com"
             className="w-full px-4 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
@@ -230,7 +230,11 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
                         type="text"
                         value={service.pathToLogs}
                         onChange={(e) =>
-                          handleServiceChange(index, "pathToLogs", e.target.value)
+                          handleServiceChange(
+                            index,
+                            "pathToLogs",
+                            e.target.value
+                          )
                         }
                         placeholder="/home/nick/logs/"
                         className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"
@@ -246,7 +250,11 @@ export const ModalMachineAdd: React.FC<ModalMachineAddProps> = ({
                         type="text"
                         value={service.filenameTimer || ""}
                         onChange={(e) =>
-                          handleServiceChange(index, "filenameTimer", e.target.value)
+                          handleServiceChange(
+                            index,
+                            "filenameTimer",
+                            e.target.value
+                          )
                         }
                         placeholder="e.g., personalweb03-api.timer"
                         className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 transition-all"

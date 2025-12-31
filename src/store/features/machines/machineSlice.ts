@@ -3,63 +3,63 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Machine {
-	_id: string;
-	machineName: string;
-	urlFor404Api: string;
-	localIpAddress: string;
-	nginxStoragePathOptions: string[];
+  _id: string;
+  machineName: string;
+  urlApiForTsmNetwork: string;
+  localIpAddress: string;
+  nginxStoragePathOptions: string[];
 }
 
 export interface MachineState {
-	machinesArray: Machine[];
-	connectedMachine: Machine | null;
-	defaultMachine: Machine | null;
+  machinesArray: Machine[];
+  connectedMachine: Machine | null;
+  defaultMachine: Machine | null;
 }
 
 const initialState: MachineState = {
-	machinesArray: [],
-	connectedMachine: null,
-	defaultMachine: null,
+  machinesArray: [],
+  connectedMachine: null,
+  defaultMachine: null,
 };
 
 export const machineSlice = createSlice({
-	name: "machine",
-	initialState,
-	reducers: {
-		setMachinesArray: (state, action: PayloadAction<Machine[]>) => {
-			state.machinesArray = action.payload;
-		},
+  name: "machine",
+  initialState,
+  reducers: {
+    setMachinesArray: (state, action: PayloadAction<Machine[]>) => {
+      state.machinesArray = action.payload;
+    },
 
-		connectMachine: (state, action: PayloadAction<Machine>) => {
-			state.connectedMachine = action.payload;
-		},
+    connectMachine: (state, action: PayloadAction<Machine>) => {
+      state.connectedMachine = action.payload;
+    },
 
-		disconnectMachine: (state) => {
-			state.connectedMachine = null;
-		},
+    disconnectMachine: (state) => {
+      state.connectedMachine = null;
+    },
 
-		setDefaultMachine: (state, action: PayloadAction<Machine | null>) => {
-			state.defaultMachine = action.payload;
-		},
+    setDefaultMachine: (state, action: PayloadAction<Machine | null>) => {
+      state.defaultMachine = action.payload;
+    },
 
-		clearDefaultMachine: (state) => {
-			state.defaultMachine = null;
-		},
+    clearDefaultMachine: (state) => {
+      state.defaultMachine = null;
+    },
 
-		clearMachines: (state) => {
-			state.machinesArray = [];
-			state.connectedMachine = null;
-		},
-	},
+    clearMachines: (state) => {
+      state.machinesArray = [];
+      state.connectedMachine = null;
+    },
+  },
 });
 
 export const {
-	setMachinesArray,
-	connectMachine,
-	disconnectMachine,
-	setDefaultMachine,
-	clearDefaultMachine,
-	clearMachines,
+  setMachinesArray,
+  connectMachine,
+  disconnectMachine,
+  setDefaultMachine,
+  clearDefaultMachine,
+  clearMachines,
 } = machineSlice.actions;
 
 export default machineSlice.reducer;
