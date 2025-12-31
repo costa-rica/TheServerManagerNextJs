@@ -25,7 +25,8 @@ interface ModalServiceGitManagerProps {
 }
 
 interface GitBranchesResponse {
-  gitBranchesArray: string[];
+  gitBranchesLocalArray: string[];
+  gitBranchesRemoteArray: string[];
   currentBranch: string;
 }
 
@@ -43,11 +44,14 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
   onError,
   onSuccess,
 }) => {
-  const [branches, setBranches] = useState<string[]>([]);
+  const [localBranches, setLocalBranches] = useState<string[]>([]);
+  const [remoteBranches, setRemoteBranches] = useState<string[]>([]);
   const [currentBranch, setCurrentBranch] = useState<string>("");
   const [loadingBranches, setLoadingBranches] = useState<boolean>(true);
   const [isActionsExpanded, setIsActionsExpanded] = useState<boolean>(true);
-  const [isBranchesExpanded, setIsBranchesExpanded] = useState<boolean>(true);
+  const [activeBranchTab, setActiveBranchTab] = useState<"local" | "remote">(
+    "local"
+  );
   const [deleteConfirmModalOpen, setDeleteConfirmModalOpen] =
     useState<boolean>(false);
   const [branchToDelete, setBranchToDelete] = useState<string | null>(null);
@@ -119,7 +123,8 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
       }
 
       const data = resJson as GitBranchesResponse;
-      setBranches(data.gitBranchesArray || []);
+      setLocalBranches(data.gitBranchesLocalArray || []);
+      setRemoteBranches(data.gitBranchesRemoteArray || []);
       setCurrentBranch(data.currentBranch || "");
       setLoadingBranches(false);
     } catch (err) {
@@ -426,28 +431,56 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
 
               {/* Branches Section */}
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setIsBranchesExpanded(!isBranchesExpanded)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
+                <div className="px-4 py-3">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Branches ({branches.length})
+                    Branches
                   </h3>
-                  {isBranchesExpanded ? (
-                    <ChevronUpIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  ) : (
-                    <ChevronDownIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                  )}
-                </button>
+                </div>
 
-                {isBranchesExpanded && (
-                  <div className="border-t border-gray-200 dark:border-gray-700">
-                    {branches.length === 0 ? (
-                      <div className="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
-                        No branches found
-                      </div>
-                    ) : (
+                {/* Tabs */}
+                <div className="border-t border-gray-200 dark:border-gray-700 flex">
+                  <button
+                    type="button"
+                    onClick={() => setActiveBranchTab("local")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeBranchTab === "local"
+                        ? "bg-brand-50 dark:bg-brand-900/10 text-brand-700 dark:text-brand-400 border-b-2 border-brand-500"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    Local ({localBranches.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveBranchTab("remote")}
+                    className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                      activeBranchTab === "remote"
+                        ? "bg-brand-50 dark:bg-brand-900/10 text-brand-700 dark:text-brand-400 border-b-2 border-brand-500"
+                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    Remote ({remoteBranches.length})
+                  </button>
+                </div>
+
+                {/* Branch List */}
+                <div className="border-t border-gray-200 dark:border-gray-700">
+                  {(() => {
+                    const branches =
+                      activeBranchTab === "local"
+                        ? localBranches
+                        : remoteBranches;
+                    const isLocalTab = activeBranchTab === "local";
+
+                    if (branches.length === 0) {
+                      return (
+                        <div className="px-4 py-3 text-center text-gray-500 dark:text-gray-400">
+                          No {activeBranchTab} branches found
+                        </div>
+                      );
+                    }
+
+                    return (
                       <div className="divide-y divide-gray-200 dark:divide-gray-700">
                         {branches.map((branch) => {
                           const isCurrentBranch = branch === currentBranch;
@@ -492,23 +525,25 @@ export const ModalServiceGitManager: React.FC<ModalServiceGitManagerProps> = ({
                                 )}
                               </button>
 
-                              {!isCurrentBranch && !isProtectedBranch && (
-                                <button
-                                  type="button"
-                                  onClick={() => confirmDeleteBranch(branch)}
-                                  className="p-2 hover:bg-error-100 dark:hover:bg-error-900/30 rounded transition-colors"
-                                  title="Delete branch"
-                                >
-                                  <TrashBinIcon className="w-4 h-4 text-error-500" />
-                                </button>
-                              )}
+                              {isLocalTab &&
+                                !isCurrentBranch &&
+                                !isProtectedBranch && (
+                                  <button
+                                    type="button"
+                                    onClick={() => confirmDeleteBranch(branch)}
+                                    className="p-2 hover:bg-error-100 dark:hover:bg-error-900/30 rounded transition-colors"
+                                    title="Delete branch"
+                                  >
+                                    <TrashBinIcon className="w-4 h-4 text-error-500" />
+                                  </button>
+                                )}
                             </div>
                           );
                         })}
                       </div>
-                    )}
-                  </div>
-                )}
+                    );
+                  })()}
+                </div>
               </div>
             </div>
           )}
