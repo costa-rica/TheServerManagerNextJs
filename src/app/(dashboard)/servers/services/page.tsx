@@ -7,6 +7,7 @@ import { useAppSelector } from "@/store/hooks";
 import { Modal } from "@/components/ui/modal";
 import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
 import { ModalServiceGitManager } from "@/components/ui/modal/ModalServiceGitManager";
+import { ModalNodeJsManager } from "@/components/ui/modal/ModalNodeJsManager";
 import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 
 export default function ServicesPage() {
@@ -14,6 +15,7 @@ export default function ServicesPage() {
 	const [loading, setLoading] = useState(true);
 	const [isLogModalOpen, setIsLogModalOpen] = useState(false);
 	const [isGitModalOpen, setIsGitModalOpen] = useState(false);
+	const [isNodeJsModalOpen, setIsNodeJsModalOpen] = useState(false);
 	const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
 	const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
 	const [apiErrorData, setApiErrorData] = useState<{
@@ -118,6 +120,11 @@ export default function ServicesPage() {
 	const handleViewGit = (serviceName: string) => {
 		setSelectedServiceName(serviceName);
 		setIsGitModalOpen(true);
+	};
+
+	const handleViewNodeJs = (serviceName: string) => {
+		setSelectedServiceName(serviceName);
+		setIsNodeJsModalOpen(true);
 	};
 
 	const handleToggleStatus = async (
@@ -232,6 +239,7 @@ export default function ServicesPage() {
 					data={services}
 					handleViewLogs={handleViewLogs}
 					handleViewGit={handleViewGit}
+					handleViewNodeJs={handleViewNodeJs}
 					handleToggleStatus={handleToggleStatus}
 				/>
 			)}
@@ -285,6 +293,31 @@ export default function ServicesPage() {
 						onSuccess={() => {
 							// Optionally refresh services after git actions
 							fetchServices();
+						}}
+					/>
+				</Modal>
+			)}
+
+			{/* Node.js Manager Modal */}
+			{selectedServiceName && (
+				<Modal
+					isOpen={isNodeJsModalOpen}
+					onClose={() => {
+						setIsNodeJsModalOpen(false);
+						setSelectedServiceName(null);
+					}}
+					showCloseButton={true}
+				>
+					<ModalNodeJsManager
+						serviceName={selectedServiceName}
+						onClose={() => {
+							setIsNodeJsModalOpen(false);
+							setSelectedServiceName(null);
+						}}
+						onError={(errorData) => {
+							setIsNodeJsModalOpen(false);
+							setApiErrorData(errorData);
+							setApiErrorModalOpen(true);
 						}}
 					/>
 				</Modal>

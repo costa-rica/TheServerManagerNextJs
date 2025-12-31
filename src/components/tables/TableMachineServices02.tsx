@@ -21,6 +21,7 @@ interface TableMachineServices02Props {
 	data: Service[];
 	handleViewLogs: (serviceName: string) => void;
 	handleViewGit: (serviceName: string) => void;
+	handleViewNodeJs: (serviceName: string) => void;
 	handleToggleStatus: (
 		serviceFilename: string,
 		toggleStatus: string,
@@ -32,6 +33,7 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 	data,
 	handleViewLogs,
 	handleViewGit,
+	handleViewNodeJs,
 	handleToggleStatus,
 }) => {
 	const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -306,6 +308,18 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 
 				return (
 					<div className="flex items-center justify-end gap-2">
+						<button
+							type="button"
+							onClick={() => handleViewNodeJs(service.name)}
+							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+							title="Node.js manager"
+						>
+							<img
+								src="/assets/images/logoJs.png"
+								alt="Node.js"
+								className="w-4 h-4 object-contain block"
+							/>
+						</button>
 						<button
 							type="button"
 							onClick={() => handleViewGit(service.name)}
