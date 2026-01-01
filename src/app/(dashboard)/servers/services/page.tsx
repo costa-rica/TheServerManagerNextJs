@@ -449,6 +449,7 @@ export default function ServicesPage() {
             setSelectedServiceFilename(null);
           }}
           showCloseButton={true}
+          className="max-w-6xl"
         >
           <ModalServicesManagerEditor
             serviceName={selectedServiceName}

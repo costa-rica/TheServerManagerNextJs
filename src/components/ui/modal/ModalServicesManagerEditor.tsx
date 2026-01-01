@@ -231,7 +231,7 @@ export const ModalServicesManagerEditor: React.FC<
   const isTimerModified = timerContent !== originalTimerContent;
 
   return (
-    <div className="flex flex-col w-[90vw] h-[90vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
+    <div className="flex flex-col w-full h-[85vh] bg-white dark:bg-gray-900 rounded-lg overflow-hidden">
       {/* Header */}
       <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
