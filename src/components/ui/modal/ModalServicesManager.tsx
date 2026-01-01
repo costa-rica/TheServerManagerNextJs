@@ -80,7 +80,7 @@ export const ModalServicesManager: React.FC<ModalServicesManagerProps> = ({
 
   // Determine if port is required (most templates except script-only timers)
   const isPortRequired =
-    filenameServiceTemplate !== "nodejsscript.service" ||
+    filenameServiceTemplate !== "nodejsscript.service" &&
     filenameServiceTemplate !== "pythonscript.service";
 
   const handleCreateServiceFile = async () => {
