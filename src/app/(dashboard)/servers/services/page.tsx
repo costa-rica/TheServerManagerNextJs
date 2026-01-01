@@ -8,7 +8,9 @@ import { Modal } from "@/components/ui/modal";
 import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
 import { ModalServiceGitManager } from "@/components/ui/modal/ModalServiceGitManager";
 import { ModalNodeJsManager } from "@/components/ui/modal/ModalNodeJsManager";
+import { ModalServicesManager } from "@/components/ui/modal/ModalServicesManager";
 import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
+import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -16,9 +18,13 @@ export default function ServicesPage() {
   const [isLogModalOpen, setIsLogModalOpen] = useState(false);
   const [isGitModalOpen, setIsGitModalOpen] = useState(false);
   const [isNodeJsModalOpen, setIsNodeJsModalOpen] = useState(false);
+  const [isServicesManagerModalOpen, setIsServicesManagerModalOpen] =
+    useState(false);
   const [selectedServiceName, setSelectedServiceName] = useState<string | null>(
     null
   );
+  const [successModalOpen, setSuccessModalOpen] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
   const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
   const [apiErrorData, setApiErrorData] = useState<{
     code: string;
@@ -241,6 +247,13 @@ export default function ServicesPage() {
             Monitor and manage systemd services on your server
           </p>
         </div>
+        <button
+          type="button"
+          onClick={() => setIsServicesManagerModalOpen(true)}
+          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors text-sm"
+        >
+          Create Service File
+        </button>
       </div>
 
       {/* Loading State */}
@@ -369,6 +382,47 @@ export default function ServicesPage() {
           />
         </Modal>
       )}
+
+      {/* Services Manager Modal */}
+      <Modal
+        isOpen={isServicesManagerModalOpen}
+        onClose={() => setIsServicesManagerModalOpen(false)}
+        showCloseButton={true}
+      >
+        <ModalServicesManager
+          onClose={() => setIsServicesManagerModalOpen(false)}
+          onError={(errorData) => {
+            setIsServicesManagerModalOpen(false);
+            setApiErrorData(errorData);
+            setApiErrorModalOpen(true);
+          }}
+          onSuccess={(message) => {
+            setSuccessMessage(message);
+            setSuccessModalOpen(true);
+            // Optionally refresh services after creating service file
+            fetchServices();
+          }}
+        />
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={successModalOpen}
+        onClose={() => {
+          setSuccessModalOpen(false);
+          setSuccessMessage("");
+        }}
+      >
+        <ModalInformationOk
+          title="Success"
+          message={successMessage}
+          variant="success"
+          onClose={() => {
+            setSuccessModalOpen(false);
+            setSuccessMessage("");
+          }}
+        />
+      </Modal>
     </div>
   );
 }
