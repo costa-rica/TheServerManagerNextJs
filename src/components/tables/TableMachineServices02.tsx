@@ -22,6 +22,7 @@ interface TableMachineServices02Props {
 	handleViewLogs: (serviceName: string) => void;
 	handleViewGit: (serviceName: string) => void;
 	handleViewNodeJs: (serviceName: string) => void;
+	handleEditServiceFile: (serviceName: string, serviceFilename: string) => void;
 	handleToggleStatus: (
 		serviceFilename: string,
 		toggleStatus: string,
@@ -34,6 +35,7 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 	handleViewLogs,
 	handleViewGit,
 	handleViewNodeJs,
+	handleEditServiceFile,
 	handleToggleStatus,
 }) => {
 	const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
@@ -308,6 +310,18 @@ export const TableMachineServices02: React.FC<TableMachineServices02Props> = ({
 
 				return (
 					<div className="flex items-center justify-center gap-2">
+						<button
+							type="button"
+							onClick={() => handleEditServiceFile(service.name, service.filename)}
+							className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+							title="Edit service file"
+						>
+							<img
+								src="/assets/images/UbuntuOrangeTransparent.png"
+								alt="Ubuntu"
+								className="w-4 h-4 object-contain block"
+							/>
+						</button>
 						<button
 							type="button"
 							onClick={() => handleViewNodeJs(service.name)}

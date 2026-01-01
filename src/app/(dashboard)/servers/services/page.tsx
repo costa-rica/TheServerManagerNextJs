@@ -9,6 +9,7 @@ import { ModalServiceLog } from "@/components/ui/modal/ModalServiceLog";
 import { ModalServiceGitManager } from "@/components/ui/modal/ModalServiceGitManager";
 import { ModalNodeJsManager } from "@/components/ui/modal/ModalNodeJsManager";
 import { ModalServicesManager } from "@/components/ui/modal/ModalServicesManager";
+import { ModalServicesManagerEditor } from "@/components/ui/modal/ModalServicesManagerEditor";
 import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
 
@@ -20,9 +21,13 @@ export default function ServicesPage() {
   const [isNodeJsModalOpen, setIsNodeJsModalOpen] = useState(false);
   const [isServicesManagerModalOpen, setIsServicesManagerModalOpen] =
     useState(false);
+  const [isServiceEditorModalOpen, setIsServiceEditorModalOpen] =
+    useState(false);
   const [selectedServiceName, setSelectedServiceName] = useState<string | null>(
     null
   );
+  const [selectedServiceFilename, setSelectedServiceFilename] =
+    useState<string | null>(null);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
@@ -148,6 +153,15 @@ export default function ServicesPage() {
   const handleViewNodeJs = (serviceName: string) => {
     setSelectedServiceName(serviceName);
     setIsNodeJsModalOpen(true);
+  };
+
+  const handleEditServiceFile = (
+    serviceName: string,
+    serviceFilename: string
+  ) => {
+    setSelectedServiceName(serviceName);
+    setSelectedServiceFilename(serviceFilename);
+    setIsServiceEditorModalOpen(true);
   };
 
   const handleToggleStatus = async (
@@ -281,6 +295,7 @@ export default function ServicesPage() {
           handleViewLogs={handleViewLogs}
           handleViewGit={handleViewGit}
           handleViewNodeJs={handleViewNodeJs}
+          handleEditServiceFile={handleEditServiceFile}
           handleToggleStatus={handleToggleStatus}
         />
       )}
@@ -423,6 +438,38 @@ export default function ServicesPage() {
           }}
         />
       </Modal>
+
+      {/* Service Editor Modal */}
+      {selectedServiceName && selectedServiceFilename && (
+        <Modal
+          isOpen={isServiceEditorModalOpen}
+          onClose={() => {
+            setIsServiceEditorModalOpen(false);
+            setSelectedServiceName(null);
+            setSelectedServiceFilename(null);
+          }}
+          showCloseButton={true}
+        >
+          <ModalServicesManagerEditor
+            serviceName={selectedServiceName}
+            serviceFilename={selectedServiceFilename}
+            onClose={() => {
+              setIsServiceEditorModalOpen(false);
+              setSelectedServiceName(null);
+              setSelectedServiceFilename(null);
+            }}
+            onError={(errorData) => {
+              setIsServiceEditorModalOpen(false);
+              setApiErrorData(errorData);
+              setApiErrorModalOpen(true);
+            }}
+            onSuccess={(message) => {
+              setSuccessMessage(message);
+              setSuccessModalOpen(true);
+            }}
+          />
+        </Modal>
+      )}
     </div>
   );
 }
