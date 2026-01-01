@@ -26,8 +26,9 @@ export default function ServicesPage() {
   const [selectedServiceName, setSelectedServiceName] = useState<string | null>(
     null
   );
-  const [selectedServiceFilename, setSelectedServiceFilename] =
-    useState<string | null>(null);
+  const [selectedServiceFilename, setSelectedServiceFilename] = useState<
+    string | null
+  >(null);
   const [successModalOpen, setSuccessModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [apiErrorModalOpen, setApiErrorModalOpen] = useState(false);
@@ -182,7 +183,7 @@ export default function ServicesPage() {
 
     try {
       const response = await fetch(
-        `${connectedMachine.urlApiForTsmNetwork}/services/${serviceFilename}/${toggleStatus}`,
+        `${connectedMachine.urlApiForTsmNetwork}/services/control/${serviceFilename}/${toggleStatus}`,
         {
           method: "POST",
           headers: {
