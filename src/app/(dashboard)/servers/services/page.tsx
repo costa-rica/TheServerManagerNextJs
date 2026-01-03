@@ -12,6 +12,7 @@ import { ModalServicesManager } from "@/components/ui/modal/ModalServicesManager
 import { ModalServicesManagerEditor } from "@/components/ui/modal/ModalServicesManagerEditor";
 import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
+import { ModalSyslog } from "@/components/ui/modal/ModalSyslog";
 
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([]);
@@ -23,6 +24,7 @@ export default function ServicesPage() {
     useState(false);
   const [isServiceEditorModalOpen, setIsServiceEditorModalOpen] =
     useState(false);
+  const [isSyslogModalOpen, setIsSyslogModalOpen] = useState(false);
   const [selectedServiceName, setSelectedServiceName] = useState<string | null>(
     null
   );
@@ -262,13 +264,22 @@ export default function ServicesPage() {
             Monitor and manage systemd services on your server
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsServicesManagerModalOpen(true)}
-          className="px-4 py-2 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors text-sm"
-        >
-          Create Service File
-        </button>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setIsSyslogModalOpen(true)}
+            className="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition-colors text-sm"
+          >
+            syslog
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsServicesManagerModalOpen(true)}
+            className="px-4 py-2 bg-brand-500 hover:bg-brand-600 dark:bg-brand-400 dark:hover:bg-brand-500 text-white rounded-lg font-medium transition-colors text-sm"
+          >
+            Create Service File
+          </button>
+        </div>
       </div>
 
       {/* Loading State */}
@@ -472,6 +483,23 @@ export default function ServicesPage() {
           />
         </Modal>
       )}
+
+      {/* Syslog Modal */}
+      <Modal
+        isOpen={isSyslogModalOpen}
+        onClose={() => setIsSyslogModalOpen(false)}
+        isFullscreen={true}
+        showCloseButton={true}
+      >
+        <ModalSyslog
+          onClose={() => setIsSyslogModalOpen(false)}
+          onError={(errorData) => {
+            setIsSyslogModalOpen(false);
+            setApiErrorData(errorData);
+            setApiErrorModalOpen(true);
+          }}
+        />
+      </Modal>
     </div>
   );
 }

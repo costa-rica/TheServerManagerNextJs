@@ -115,6 +115,19 @@ curl --location 'http://localhost:3000/machines/check-nick-systemctl' \
 }
 ```
 
+**Error Response (403 Forbidden - CSV File Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "CSV_FILE_PERMISSION_DENIED",
+    "message": "Permission denied accessing CSV file",
+    "details": "The file /home/nick/nick-systemctl.csv exists but cannot be accessed due to insufficient permissions (only in development mode)",
+    "status": 403
+  }
+}
+```
+
 **Error Response (500 Internal Server Error - CSV Read Error):**
 
 ```json
@@ -150,6 +163,19 @@ curl --location 'http://localhost:3000/machines/check-nick-systemctl' \
     "message": "Service file not found in systemd directory",
     "details": "Service file 'tsm-api.service' is listed in the CSV but does not exist at /etc/systemd/system/tsm-api.service",
     "status": 404
+  }
+}
+```
+
+**Error Response (403 Forbidden - Service File Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "SERVICE_FILE_PERMISSION_DENIED",
+    "message": "Permission denied accessing service file in systemd directory",
+    "details": "Service file 'tsm-api.service' is listed in the CSV and exists at /etc/systemd/system/tsm-api.service but cannot be accessed due to insufficient permissions (only in development mode)",
+    "status": 403
   }
 }
 ```
@@ -201,6 +227,80 @@ curl --location 'http://localhost:3000/machines/check-nick-systemctl' \
 - Returns first matching port pattern found in service file
 - Port and timer fields are optional in response (only included if found)
 - All errors follow standardized error response format
+- `details` field in errors is only populated in development (NODE_ENV !== 'production')
+
+---
+
+## GET /machines/syslog
+
+Get the entire system log file from `/var/log/syslog`.
+
+**Authentication:** Required (JWT token)
+
+**Sample Request:**
+
+```bash
+curl --location 'http://localhost:3000/machines/syslog' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...'
+```
+
+**Success Response (200 OK):**
+
+Returns the entire syslog file as plain text with `Content-Type: text/plain` header.
+
+```
+Jan  3 10:15:23 ubuntu-server-01 systemd[1]: Started Session 123 of user ubuntu.
+Jan  3 10:15:24 ubuntu-server-01 kernel: [12345.678901] eth0: link up
+Jan  3 10:15:25 ubuntu-server-01 sshd[9876]: Accepted publickey for ubuntu from 192.168.1.50
+...
+```
+
+**Error Response (404 Not Found - File Does Not Exist):**
+
+```json
+{
+  "error": {
+    "code": "FILE_NOT_FOUND",
+    "message": "Syslog file not found",
+    "details": "The file /var/log/syslog does not exist",
+    "status": 404
+  }
+}
+```
+
+**Error Response (403 Forbidden - Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "PERMISSION_DENIED",
+    "message": "Permission denied to read syslog file",
+    "details": "Insufficient permissions to read /var/log/syslog",
+    "status": 403
+  }
+}
+```
+
+**Error Response (500 Internal Server Error):**
+
+```json
+{
+  "error": {
+    "code": "INTERNAL_ERROR",
+    "message": "Failed to read syslog file",
+    "details": "Detailed error message (only in development mode)",
+    "status": 500
+  }
+}
+```
+
+**Behavior:**
+
+- Returns the entire `/var/log/syslog` file contents as plain text
+- Does not perform any filtering or truncation
+- File size can be very large depending on system logging configuration
+- Response includes `Content-Type: text/plain` header
+- Available to all authenticated users (not restricted to admins)
 - `details` field in errors is only populated in development (NODE_ENV !== 'production')
 
 ---
@@ -363,7 +463,7 @@ curl --location 'http://localhost:3000/machines' \
 }
 ```
 
-**Error Response (400 Bad Request - Service File Not Found):**
+**Error Response (404 Not Found - Service File Not Found):**
 
 ```json
 {
@@ -371,12 +471,25 @@ curl --location 'http://localhost:3000/machines' \
     "code": "SERVICE_FILE_NOT_FOUND",
     "message": "Service file not found",
     "details": "Service file 'personalweb03-api.service' does not exist at /etc/systemd/system/personalweb03-api.service",
-    "status": 400
+    "status": 404
   }
 }
 ```
 
-**Error Response (400 Bad Request - WorkingDirectory Not Found):**
+**Error Response (403 Forbidden - Service File Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "SERVICE_FILE_PERMISSION_DENIED",
+    "message": "Permission denied accessing service file",
+    "details": "Service file 'personalweb03-api.service' exists at /etc/systemd/system/personalweb03-api.service but cannot be accessed due to insufficient permissions (only in development mode)",
+    "status": 403
+  }
+}
+```
+
+**Error Response (404 Not Found - WorkingDirectory Not Found):**
 
 ```json
 {
@@ -384,12 +497,25 @@ curl --location 'http://localhost:3000/machines' \
     "code": "WORKING_DIRECTORY_NOT_FOUND",
     "message": "WorkingDirectory not found in service file",
     "details": "Service file 'personalweb03-api.service' is missing the WorkingDirectory property",
-    "status": 400
+    "status": 404
   }
 }
 ```
 
-**Error Response (400 Bad Request - .env File Not Found):**
+**Error Response (403 Forbidden - WorkingDirectory Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "WORKING_DIRECTORY_PERMISSION_DENIED",
+    "message": "Permission denied accessing WorkingDirectory",
+    "details": "WorkingDirectory '/home/ubuntu/personalweb03-api' specified in service file 'personalweb03-api.service' exists but cannot be accessed due to insufficient permissions (only in development mode)",
+    "status": 403
+  }
+}
+```
+
+**Error Response (404 Not Found - .env File Not Found):**
 
 ```json
 {
@@ -397,7 +523,20 @@ curl --location 'http://localhost:3000/machines' \
     "code": "ENV_FILE_NOT_FOUND",
     "message": ".env file not found",
     "details": ".env file not found in WorkingDirectory '/home/ubuntu/personalweb03-api' for service 'personalweb03-api.service'",
-    "status": 400
+    "status": 404
+  }
+}
+```
+
+**Error Response (403 Forbidden - .env File Permission Denied):**
+
+```json
+{
+  "error": {
+    "code": "ENV_FILE_PERMISSION_DENIED",
+    "message": "Permission denied reading .env file",
+    "details": ".env file exists in '/home/ubuntu/personalweb03-api' for service 'personalweb03-api.service' but cannot be read due to insufficient permissions (only in development mode)",
+    "status": 403
   }
 }
 ```
@@ -478,6 +617,40 @@ curl --location --request PATCH 'http://localhost:3000/machines/a3f2b1c4-5d6e-7f
 --data-raw '{
   "urlApiForTsmNetwork": "http://192.168.1.100:8080",
   "nginxStoragePathOptions": ["/var/www", "/home/user/sites", "/etc/nginx/sites-available"]
+}'
+```
+
+**Sample Request with servicesArray:**
+
+```bash
+curl --location --request PATCH 'https://tsm-api.nn10prod-08.dashanddata.com/machines/publicID-d2489f0-publicID-6c97ea3d78e' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' \
+--data-raw '{
+  "urlApiForTsmNetwork": "https://tsm-api.nn10prod-08.dashanddata.com",
+  "nginxStoragePathOptions": ["/home/nick/", "/etc/nginx/sites-available"],
+  "servicesArray": [
+    {
+      "filename": "tsm-api.service",
+      "pathToLogs": "/home/nick/logs/",
+      "port": 8000
+    },
+    {
+      "filename": "newsnexus10api.service",
+      "pathToLogs": "/home/nick/logs/",
+      "port": 8001
+    },
+    {
+      "filename": "newsnexus10portal.service",
+      "pathToLogs": "/home/nick/logs/",
+      "port": 8002
+    },
+    {
+      "filename": "newsnexuspythonqueuer01.service",
+      "pathToLogs": "/home/nick/logs/",
+      "port": 8003
+    }
+  ]
 }'
 ```
 
