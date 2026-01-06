@@ -10,6 +10,9 @@ import {
 	SortingState,
 	FilterFn,
 } from "@tanstack/react-table";
+import { PencilIcon } from "@/icons";
+import { ModalNginxFileEdit } from "@/components/ui/modal/ModalNginxFileEdit";
+import { Modal } from "@/components/ui/modal";
 
 interface NginxFile {
 	publicId: string;
@@ -32,6 +35,13 @@ interface TableNginxFilesProps {
 	data: NginxFile[];
 	handleDeleteConfig: (configId: string, serverName: string) => void;
 	onNullMachineIdsDetected?: (configs: Array<{ serverName: string; portNumber: number; nullFields: string[] }>) => void;
+	onError?: (errorData: {
+		code: string;
+		message: string;
+		details?: string | Record<string, unknown> | Array<unknown>;
+		status: number;
+	}) => void;
+	onSuccess?: (message: string) => void;
 }
 
 // Custom filter function for searching nginx configs
@@ -56,12 +66,18 @@ export default function TableNginxFiles({
 	data,
 	handleDeleteConfig,
 	onNullMachineIdsDetected,
+	onError,
+	onSuccess,
 }: TableNginxFilesProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [globalFilter, setGlobalFilter] = useState("");
 	const [expandedStoreDir, setExpandedStoreDir] = useState<Set<string>>(new Set());
 	const [expandedNginxHost, setExpandedNginxHost] = useState<Set<string>>(new Set());
 	const [hasCheckedForNulls, setHasCheckedForNulls] = useState(false);
+	const [editingConfig, setEditingConfig] = useState<{
+		publicId: string;
+		serverName: string;
+	} | null>(null);
 
 	// Check for null machine IDs when data changes (only once per data load)
 	React.useEffect(() => {
@@ -134,8 +150,23 @@ export default function TableNginxFiles({
 					return (
 						<div className="space-y-2">
 							{/* Server Name */}
-							<div className="font-medium text-gray-900 dark:text-white text-base">
-								{config.serverName}
+							<div className="flex items-center gap-2">
+								<div className="font-medium text-gray-900 dark:text-white text-base">
+									{config.serverName}
+								</div>
+								<button
+									onClick={() =>
+										setEditingConfig({
+											publicId: config.publicId,
+											serverName: config.serverName,
+										})
+									}
+									className="p-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors group"
+									title="Edit nginx configuration"
+									type="button"
+								>
+									<PencilIcon className="w-4 h-4 text-gray-400 dark:text-gray-500 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors" />
+								</button>
 							</div>
 
 							{/* App Host Details */}
@@ -319,6 +350,7 @@ export default function TableNginxFiles({
 	}
 
 	return (
+		<>
 		<div className="space-y-4">
 			{/* Search Input */}
 			<div className="flex items-center gap-4">
@@ -401,5 +433,19 @@ export default function TableNginxFiles({
 				</table>
 			</div>
 		</div>
+
+		{/* Edit Modal */}
+		{editingConfig && (
+			<Modal isOpen={true} onClose={() => setEditingConfig(null)}>
+				<ModalNginxFileEdit
+					nginxFilePublicId={editingConfig.publicId}
+					serverName={editingConfig.serverName}
+					onClose={() => setEditingConfig(null)}
+					onError={onError}
+					onSuccess={onSuccess}
+				/>
+			</Modal>
+		)}
+	</>
 	);
 }
