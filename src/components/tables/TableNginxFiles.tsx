@@ -436,7 +436,7 @@ export default function TableNginxFiles({
 
 		{/* Edit Modal */}
 		{editingConfig && (
-			<Modal isOpen={true} onClose={() => setEditingConfig(null)}>
+			<Modal isOpen={true} onClose={() => setEditingConfig(null)} className="max-w-6xl">
 				<ModalNginxFileEdit
 					nginxFilePublicId={editingConfig.publicId}
 					serverName={editingConfig.serverName}

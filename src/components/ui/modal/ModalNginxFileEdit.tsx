@@ -34,6 +34,11 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
   const [fileContent, setFileContent] = useState<string>("");
   const [originalContent, setOriginalContent] = useState<string>("");
   const [filePath, setFilePath] = useState<string>("");
+  const [localError, setLocalError] = useState<{
+    code: string;
+    message: string;
+    details?: string | Record<string, unknown> | Array<unknown>;
+  } | null>(null);
 
   const token = useAppSelector((state) => state.user.token);
   const connectedMachine = useAppSelector(
@@ -48,13 +53,15 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
 
   const fetchNginxConfigFile = async () => {
     if (!connectedMachine) {
+      const errorData = {
+        code: "NO_MACHINE",
+        message: "No machine connected",
+        details: "Please connect to a machine first",
+        status: 400,
+      };
+      setLocalError(errorData);
       if (onError) {
-        onError({
-          code: "NO_MACHINE",
-          message: "No machine connected",
-          details: "Please connect to a machine first",
-          status: 400,
-        });
+        onError(errorData);
       }
       setLoadingFile(false);
       onClose();
@@ -62,6 +69,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
     }
 
     setLoadingFile(true);
+    setLocalError(null);
 
     try {
       const response = await fetch(
@@ -88,17 +96,18 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
           resJson.error.message &&
           resJson.error.status
         ) {
+          const errorData = {
+            code: resJson.error.code,
+            message: resJson.error.message,
+            details: resJson.error.details,
+            status: resJson.error.status,
+          };
+          setLocalError(errorData);
           if (onError) {
-            onError({
-              code: resJson.error.code,
-              message: resJson.error.message,
-              details: resJson.error.details,
-              status: resJson.error.status,
-            });
+            onError(errorData);
           }
         }
         setLoadingFile(false);
-        onClose();
         return;
       }
 
@@ -108,19 +117,20 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
       setFilePath(data.filePath);
       setLoadingFile(false);
     } catch (err) {
+      const errorData = {
+        code: "NETWORK_ERROR",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch nginx config file",
+        details: "Unable to connect to the server",
+        status: 0,
+      };
+      setLocalError(errorData);
       if (onError) {
-        onError({
-          code: "NETWORK_ERROR",
-          message:
-            err instanceof Error
-              ? err.message
-              : "Failed to fetch nginx config file",
-          details: "Unable to connect to the server",
-          status: 0,
-        });
+        onError(errorData);
       }
       setLoadingFile(false);
-      onClose();
     }
   };
 
@@ -135,6 +145,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
       return;
     }
 
+    setLocalError(null);
     showLoading({
       message: `Updating ${serverName} nginx configuration...`,
       variant: "info",
@@ -169,13 +180,15 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
           resJson.error.message &&
           resJson.error.status
         ) {
+          const errorData = {
+            code: resJson.error.code,
+            message: resJson.error.message,
+            details: resJson.error.details,
+            status: resJson.error.status,
+          };
+          setLocalError(errorData);
           if (onError) {
-            onError({
-              code: resJson.error.code,
-              message: resJson.error.message,
-              details: resJson.error.details,
-              status: resJson.error.status,
-            });
+            onError(errorData);
           }
         }
         return;
@@ -183,6 +196,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
 
       // Update original content to current content after successful save
       setOriginalContent(fileContent);
+      setLocalError(null);
 
       if (onSuccess) {
         onSuccess(
@@ -192,16 +206,18 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
       }
     } catch (err) {
       hideLoading();
+      const errorData = {
+        code: "NETWORK_ERROR",
+        message:
+          err instanceof Error
+            ? err.message
+            : `Failed to update nginx config for ${serverName}`,
+        details: "Unable to connect to the server",
+        status: 0,
+      };
+      setLocalError(errorData);
       if (onError) {
-        onError({
-          code: "NETWORK_ERROR",
-          message:
-            err instanceof Error
-              ? err.message
-              : `Failed to update nginx config for ${serverName}`,
-          details: "Unable to connect to the server",
-          status: 0,
-        });
+        onError(errorData);
       }
     }
   };
@@ -243,6 +259,40 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
                   )}
                 </label>
               </div>
+
+              {/* Error Display */}
+              {localError && (
+                <div className="mb-4 p-4 bg-error-50 dark:bg-error-900/20 border border-error-200 dark:border-error-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg
+                        className="w-5 h-5 text-error-600 dark:text-error-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-error-800 dark:text-error-300">
+                        {localError.message}
+                      </h3>
+                      {localError.details && (
+                        <p className="mt-1 text-sm text-error-700 dark:text-error-400">
+                          {typeof localError.details === "string"
+                            ? localError.details
+                            : JSON.stringify(localError.details)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <textarea
                 value={fileContent}
                 onChange={(e) => setFileContent(e.target.value)}
