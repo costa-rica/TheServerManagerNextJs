@@ -36,6 +36,9 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
   const [filePath, setFilePath] = useState<string>("");
 
   const token = useAppSelector((state) => state.user.token);
+  const connectedMachine = useAppSelector(
+    (state) => state.machine.connectedMachine
+  );
   const { showLoading, hideLoading } = useLoading();
 
   // Fetch nginx config file on mount
@@ -44,11 +47,25 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
   }, [nginxFilePublicId]);
 
   const fetchNginxConfigFile = async () => {
+    if (!connectedMachine) {
+      if (onError) {
+        onError({
+          code: "NO_MACHINE",
+          message: "No machine connected",
+          details: "Please connect to a machine first",
+          status: 400,
+        });
+      }
+      setLoadingFile(false);
+      onClose();
+      return;
+    }
+
     setLoadingFile(true);
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/nginx/config-file/${nginxFilePublicId}`,
+        `${connectedMachine.urlApiForTsmNetwork}/nginx/config-file/${nginxFilePublicId}`,
         {
           method: "GET",
           headers: {
@@ -108,6 +125,8 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
   };
 
   const handleUpdateFile = async () => {
+    if (!connectedMachine) return;
+
     // Check if content has changed
     if (fileContent === originalContent) {
       if (onSuccess) {
@@ -123,7 +142,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/nginx/config-file/${nginxFilePublicId}`,
+        `${connectedMachine.urlApiForTsmNetwork}/nginx/config-file/${nginxFilePublicId}`,
         {
           method: "POST",
           headers: {
