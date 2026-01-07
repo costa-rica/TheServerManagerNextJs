@@ -39,6 +39,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
     message: string;
     details?: string | Record<string, unknown> | Array<unknown>;
   } | null>(null);
+  const [localSuccess, setLocalSuccess] = useState<string | null>(null);
 
   const token = useAppSelector((state) => state.user.token);
   const connectedMachine = useAppSelector(
@@ -146,6 +147,7 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
     }
 
     setLocalError(null);
+    setLocalSuccess(null);
     showLoading({
       message: `Updating ${serverName} nginx configuration...`,
       variant: "info",
@@ -198,11 +200,13 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
       setOriginalContent(fileContent);
       setLocalError(null);
 
+      const successMessage =
+        resJson?.message ||
+        `Nginx configuration for ${serverName} updated successfully`;
+      setLocalSuccess(successMessage);
+
       if (onSuccess) {
-        onSuccess(
-          resJson?.message ||
-            `Nginx configuration for ${serverName} updated successfully`
-        );
+        onSuccess(successMessage);
       }
     } catch (err) {
       hideLoading();
@@ -293,9 +297,40 @@ export const ModalNginxFileEdit: React.FC<ModalNginxFileEditProps> = ({
                 </div>
               )}
 
+              {/* Success Display */}
+              {localSuccess && (
+                <div className="mb-4 p-4 bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 mt-0.5">
+                      <svg
+                        className="w-5 h-5 text-success-600 dark:text-success-400"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-semibold text-success-800 dark:text-success-300">
+                        {localSuccess}
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <textarea
                 value={fileContent}
-                onChange={(e) => setFileContent(e.target.value)}
+                onChange={(e) => {
+                  setFileContent(e.target.value);
+                  // Clear success/error messages when user starts typing
+                  if (localSuccess) setLocalSuccess(null);
+                  if (localError) setLocalError(null);
+                }}
                 className="flex-1 w-full px-4 py-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:focus:ring-brand-400 text-gray-900 dark:text-white font-mono text-sm resize-none"
                 spellCheck={false}
               />
