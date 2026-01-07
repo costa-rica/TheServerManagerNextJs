@@ -391,25 +391,6 @@ export default function ServicesPage() {
         </Modal>
       )}
 
-      {/* API Error Modal */}
-      {apiErrorData && (
-        <Modal
-          isOpen={apiErrorModalOpen}
-          onClose={() => {
-            setApiErrorModalOpen(false);
-            setApiErrorData(null);
-          }}
-        >
-          <ModalErrorResponse
-            error={apiErrorData}
-            onClose={() => {
-              setApiErrorModalOpen(false);
-              setApiErrorData(null);
-            }}
-          />
-        </Modal>
-      )}
-
       {/* Services Manager Modal */}
       <Modal
         isOpen={isServicesManagerModalOpen}
@@ -428,25 +409,6 @@ export default function ServicesPage() {
             setSuccessModalOpen(true);
             // Optionally refresh services after creating service file
             fetchServices();
-          }}
-        />
-      </Modal>
-
-      {/* Success Modal */}
-      <Modal
-        isOpen={successModalOpen}
-        onClose={() => {
-          setSuccessModalOpen(false);
-          setSuccessMessage("");
-        }}
-      >
-        <ModalInformationOk
-          title="Success"
-          message={successMessage}
-          variant="success"
-          onClose={() => {
-            setSuccessModalOpen(false);
-            setSuccessMessage("");
           }}
         />
       </Modal>
@@ -483,6 +445,44 @@ export default function ServicesPage() {
           />
         </Modal>
       )}
+
+      {/* API Error Modal */}
+      {apiErrorData && (
+        <Modal
+          isOpen={apiErrorModalOpen}
+          onClose={() => {
+            setApiErrorModalOpen(false);
+            setApiErrorData(null);
+          }}
+        >
+          <ModalErrorResponse
+            error={apiErrorData}
+            onClose={() => {
+              setApiErrorModalOpen(false);
+              setApiErrorData(null);
+            }}
+          />
+        </Modal>
+      )}
+
+      {/* Success Modal */}
+      <Modal
+        isOpen={successModalOpen}
+        onClose={() => {
+          setSuccessModalOpen(false);
+          setSuccessMessage("");
+        }}
+      >
+        <ModalInformationOk
+          title="Success"
+          message={successMessage}
+          variant="success"
+          onClose={() => {
+            setSuccessModalOpen(false);
+            setSuccessMessage("");
+          }}
+        />
+      </Modal>
 
       {/* Syslog Modal */}
       <Modal
