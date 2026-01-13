@@ -112,7 +112,7 @@ Content-Type: application/json
 
 Response:
 
-````json
+```json
 {
   "success": true,
   "message": "Page access updated",
@@ -122,6 +122,7 @@ Response:
     "accessPagesArray": ["/dns/nginx", "/dns/registrar", "/servers/services"]
   }
 }
+```
 
 ## Frontend
 
@@ -136,6 +137,7 @@ If a user types the url of a page they are not allowed to access, they will be r
 The accessPagesArray stores only permission-controlled pages. Do NOT include public pages or default pages in the database.
 
 Permission logic:
+
 - Admin users (isAdmin=true) bypass all permission checks and see all pages
 - Non-admin users must have the page path in accessPagesArray to access it
 - Page matching uses exact path with startsWith() for nested routes
@@ -145,15 +147,18 @@ Permission logic:
 Default pages are accessible to all authenticated users and defined in code, not stored in the database.
 
 Default accessible pages:
+
 - /home
 - /servers/machines (accessible to all users as the primary landing page)
 
 Benefits of defining in code:
+
 - No database bloat from repeating defaults for every user
 - Simpler user administration
 - Single place to maintain defaults
 
 Implementation:
+
 - Create DEFAULT_ACCESSIBLE_PAGES constant in src/utils/permissions.ts
 - Permission checks combine DEFAULT_ACCESSIBLE_PAGES + accessPagesArray
 - Sidebar filtering includes defaults automatically
@@ -165,10 +170,11 @@ Create a centralized utility function for permission checking:
 ```typescript
 function hasPageAccess(pathname, isAdmin, accessPagesArray) {
   if (isAdmin) return true;
-  if (DEFAULT_ACCESSIBLE_PAGES.some(page => pathname.startsWith(page))) return true;
-  return accessPagesArray.some(page => pathname.startsWith(page));
+  if (DEFAULT_ACCESSIBLE_PAGES.some((page) => pathname.startsWith(page)))
+    return true;
+  return accessPagesArray.some((page) => pathname.startsWith(page));
 }
-````
+```
 
 Used in:
 
