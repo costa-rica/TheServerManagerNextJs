@@ -8,8 +8,8 @@ The Server Manager NextJs is the primary user-facing dashboard of **The Server M
 
 This Next.js web portal provides real-time visibility and management features for your servers. Through its interface, users can:
 
-- View live PM2 process logs from any connected machine.
-- Check the status of apps running under PM2.
+- View service logs from any connected machine.
+- Check the status of services running on any connected machine.
 - Manage DNS entries via the Porkbuns API to add or modify Type A subdomains.
 - Automatically generate and register Nginx configurations for new subdomains.
 - View and manage existing Nginx configuration files from each server’s `/etc/nginx/sites-available/` and `conf.d` directories.
@@ -24,7 +24,7 @@ The dashboard unifies multiple APIs, each hosted on a separate Ubuntu server, an
 - **Backend**: Connects to individual server APIs (the404back instances)
 - **Database**: MongoDB (shared across all servers for global state)
 - **Authentication**: Token-based, shared across all machines
-- **Hosting**: Ubuntu servers managed by PM2, proxied through Nginx
+- **Hosting**: Ubuntu servers managed by .service and .timer files, proxied through Nginx
 
 ---
 
