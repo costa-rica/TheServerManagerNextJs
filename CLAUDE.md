@@ -8,8 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 The dashboard provides real-time visibility for:
 
-- (To be replaced by services page, no longer using PM2)PM2 process logs from any connected machine
-- (To be replaced by services page, no longer using PM2)App status for processes running under PM2
+- Services process logs from any connected machine
+- Services status for processes running on any connected machine
 - DNS management via Porkbuns API (Type A subdomains)
 - Automatic Nginx configuration generation and management
 - Server configuration file viewing and management
@@ -19,7 +19,7 @@ The dashboard provides real-time visibility for:
 - Frontend: Next.js 16 (App Router) + TypeScript
 - Styling: Tailwind CSS v4
 - State Management: Redux Toolkit with persistence
-- Backend Integration: Connects to the404back instances on each Ubuntu server
+- Backend Integration: Connects to TheServerManagerAPI instances on each Ubuntu server
 - Database: Shared MongoDB across all servers
 - Authentication: Token-based, shared across all machines
 
@@ -296,18 +296,6 @@ All colors follow a standardized 10-step scale (25-950) defined in `src/app/glob
 
 **Font**: JetBrains Mono (monospace) - Loaded via Google Fonts in `src/app/layout.tsx`
 
-### Logo
-
-The Server Manager NextJs uses a **text-based terminal prompt** as its logo (not an image):
-
-```
-$ the-404> _
-```
-
-**Colors**: "404" in terminal orange (`#e95420`), rest theme-adaptive (black/white)
-
-**For logo implementation code, size variants, and detailed guidelines, see [docs/STYLE_GUIDE.md](./docs/STYLE_GUIDE.md).**
-
 ## Backend Integration
 
 The project uses **split environment variables** to handle server-side vs client-side API calls:
@@ -339,6 +327,8 @@ NEXT_PUBLIC_MODE=workstation  # Prefills login form
 | **Client-side** | `NEXT_PUBLIC_EXTERNAL_API_BASE_URL` | `https://dev.nws-the404...` | Component fetch calls                 |
 
 ### API Call Patterns
+
+User the connected machine's API to make API calls. These examples are for the first call where a machine is not connected and we use the default .env variable `NEXT_PUBLIC_EXTERNAL_API_BASE_URL`.
 
 **Server-side** (Next.js API routes):
 

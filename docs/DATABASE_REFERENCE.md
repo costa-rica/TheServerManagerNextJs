@@ -34,21 +34,22 @@ Represents a physical or virtual server in the network.
 
 **Model:** `src/models/machine.ts`
 
-| Field                           | Type     | Required | Unique | Description                                       |
-| ------------------------------- | -------- | -------- | ------ | ------------------------------------------------- |
-| `publicId`                      | String   | Yes      | Yes    | Public identifier for the machine                 |
-| `machineName`                   | String   | Yes      | No     | Human-readable name for the server                |
-| `urlApiForTsmNetwork`           | String   | Yes      | No     | API endpoint for 404 error handling               |
-| `localIpAddress`                | String   | Yes      | No     | Local IP address of the server                    |
-| `nginxStoragePathOptions`       | String[] | No       | No     | Array of available nginx storage paths            |
-| `servicesArray`                 | Object[] | No       | No     | Array of systemd services running on this machine |
-| `servicesArray[].name`          | String   | Yes      | No     | Service name                                      |
-| `servicesArray[].filename`      | String   | Yes      | No     | Service unit file name                            |
-| `servicesArray[].filenameTimer` | String   | No       | No     | Timer unit file name (if applicable)              |
-| `servicesArray[].port`          | Number   | No       | No     | Port the service runs on                          |
-| `servicesArray[].pathToLogs`    | String   | Yes      | No     | Path to service log files                         |
-| `createdAt`                     | Date     | Auto     | No     | Timestamp of document creation                    |
-| `updatedAt`                     | Date     | Auto     | No     | Timestamp of last update                          |
+| Field                              | Type     | Required | Unique | Description                                       |
+| ---------------------------------- | -------- | -------- | ------ | ------------------------------------------------- |
+| `publicId`                         | String   | Yes      | Yes    | Public identifier for the machine                 |
+| `machineName`                      | String   | Yes      | No     | Human-readable name for the server                |
+| `urlApiForTsmNetwork`              | String   | Yes      | No     | API endpoint for 404 error handling               |
+| `localIpAddress`                   | String   | Yes      | No     | Local IP address of the server                    |
+| `nginxStoragePathOptions`          | String[] | No       | No     | Array of available nginx storage paths            |
+| `servicesArray`                    | Object[] | No       | No     | Array of systemd services running on this machine |
+| `servicesArray[].name`             | String   | No       | No     | Service name                                      |
+| `servicesArray[].filename`         | String   | Yes      | No     | Service unit file name                            |
+| `servicesArray[].filenameTimer`    | String   | No       | No     | Timer unit file name (if applicable)              |
+| `servicesArray[].workingDirectory` | String   | No       | No     | Working directory for the service                 |
+| `servicesArray[].port`             | Number   | No       | No     | Port the service runs on                          |
+| `servicesArray[].pathToLogs`       | String   | Yes      | No     | Path to service log files                         |
+| `createdAt`                        | Date     | Auto     | No     | Timestamp of document creation                    |
+| `updatedAt`                        | Date     | Auto     | No     | Timestamp of last update                          |
 
 ---
 
