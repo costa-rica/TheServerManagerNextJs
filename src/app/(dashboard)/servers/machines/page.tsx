@@ -207,7 +207,7 @@ export default function MachinesPage() {
       console.log(resJson);
       try {
         setMachines((prevMachines) =>
-          prevMachines.filter((machine) => machine._id !== machineToDelete.id)
+          prevMachines.filter((machine) => machine.publicId !== machineToDelete.id)
         );
         const deletedMachineName = machineToDelete.name;
         setDeleteModalOpen(false);

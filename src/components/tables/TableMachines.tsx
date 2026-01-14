@@ -119,7 +119,7 @@ export default function TableMachines({
             <button
               onClick={() =>
                 handleDeleteMachine(
-                  info.row.original.publicId ?? info.row.original._id,
+                  info.row.original.publicId,
                   info.row.original.machineName
                 )
               }

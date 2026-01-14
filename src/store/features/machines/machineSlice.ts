@@ -3,7 +3,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export interface Machine {
-  _id: string;
+  publicId: string;
   machineName: string;
   urlApiForTsmNetwork: string;
   localIpAddress: string;

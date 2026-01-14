@@ -229,7 +229,7 @@ export const ModalMachineEdit: React.FC<ModalMachineEditProps> = ({
       }));
 
     // Use publicId or _id as fallback
-    const machineId = machine.publicId || machine._id;
+    const machineId = machine.publicId || machine.publicId;
 
     onSubmit(machineId, {
       urlApiForTsmNetwork: apiUrl,

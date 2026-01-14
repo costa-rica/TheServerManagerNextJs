@@ -49,10 +49,16 @@ export default function LoginForm() {
   useEffect(() => {
     // Auto-redirect if user is already logged in
     if (userReducer.token) {
-      router.push("/servers/machines");
+      if (userReducer.isAdmin) {
+        router.push("/servers/machines");
+      } else if (userReducer.accessPagesArray && userReducer.accessPagesArray.length > 0) {
+        router.push(userReducer.accessPagesArray[0]);
+      } else {
+        router.push("/home");
+      }
       return;
     }
-  }, [userReducer.token, router]);
+  }, [userReducer.token, userReducer.isAdmin, userReducer.accessPagesArray, router]);
 
   const handleClickLogin = async () => {
     console.log("Login ---> API URL:", `/api/auth/login`);
@@ -86,10 +92,21 @@ export default function LoginForm() {
               username: resJson.user.username,
               email: resJson.user.email,
               isAdmin: resJson.user.isAdmin,
+              accessServersArray: resJson.user.accessServersArray,
+              accessPagesArray: resJson.user.accessPagesArray,
             },
           })
         );
-        router.push("/servers/machines");
+
+        // Redirect based on user permissions
+        if (resJson.user.isAdmin) {
+          router.push("/servers/machines");
+        } else if (resJson.user.accessPagesArray && resJson.user.accessPagesArray.length > 0) {
+          router.push(resJson.user.accessPagesArray[0]);
+        } else {
+          // User has no permissions, redirect to home (default accessible page)
+          router.push("/home");
+        }
       } catch (error) {
         console.error("Error logging in:", error);
         showInfoModal("Error", "Error logging in", "error");

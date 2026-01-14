@@ -4,7 +4,7 @@ export const mockMachinesData: MachinesResponse = {
   result: true,
   existingMachines: [
     {
-      _id: "6772c80b0391cbca4d643214",
+      publicId: "publicId-6772c80b-0391cbca4d643214",
       localIpAddress: "192.168.1.193",
       machineName: "Nicks-Mac-mini.local",
       __v: 0,
@@ -18,7 +18,7 @@ export const mockMachinesData: MachinesResponse = {
       urlApiForTsmNetwork: "http://localhost:3000",
     },
     {
-      _id: "67fcb31d408d1b1b3a705f5a",
+      publicId: "publicId-67fcb31d-408d1b1b3a705f5a",
       localIpAddress: "192.168.100.166",
       machineName: "maestro03",
       __v: 0,
@@ -33,7 +33,7 @@ export const mockMachinesData: MachinesResponse = {
       userHomeDir: "/home/nick",
     },
     {
-      _id: "6805ffdcaa2d0072c1a3502c",
+      publicId: "publicId-6805ffdcaa-2d0072c1a3502c",
       machineName: "nnDev",
       localIpAddress: "192.168.100.148",
       __v: 0,
@@ -48,7 +48,7 @@ export const mockMachinesData: MachinesResponse = {
       urlApiForTsmNetwork: "https://nn-dev.the404api.dashanddata.com",
     },
     {
-      _id: "68107161aa2d0072c1a3f689",
+      publicId: "publicId-68107161-aa2d0072c1a3f689",
       localIpAddress: "192.168.100.149",
       machineName: "nnProd",
       __v: 0,
@@ -63,7 +63,7 @@ export const mockMachinesData: MachinesResponse = {
       urlApiForTsmNetwork: "https://nn07.the404api.dashanddata.com",
     },
     {
-      _id: "68f831b6c8a57e8067f2cf14",
+      publicId: "publicId-68f831b6-c8a57e8067f2cf14",
       localIpAddress: "10.0.0.123",
       machineName: "Nicks-MacBook-Air-3.local",
       __v: 0,

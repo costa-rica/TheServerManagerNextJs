@@ -130,10 +130,10 @@ const AppHeader: React.FC = () => {
                     </div>
                     {machinesArray.map((machine) => (
                       <button
-                        key={machine._id}
+                        key={machine.publicId}
                         onClick={() => handleSelectMachine(machine)}
                         className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
-                          machine._id === connectedMachine?._id
+                          machine.publicId === connectedMachine?.publicId
                             ? "bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-400"
                             : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-white"
                         }`}

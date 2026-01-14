@@ -32,7 +32,7 @@ const MachineSelect: React.FC<MachineSelectProps> = ({
 
     // Find the selected machine object and return it
     const selectedMachine =
-      machinesArray.find((machine) => machine._id === machineId) || null;
+      machinesArray.find((machine) => machine.publicId === machineId) || null;
     onChange(selectedMachine);
   };
 
@@ -64,8 +64,8 @@ const MachineSelect: React.FC<MachineSelectProps> = ({
         {/* Map over machines */}
         {machinesArray.map((machine) => (
           <option
-            key={machine._id}
-            value={machine._id}
+            key={machine.publicId}
+            value={machine.publicId}
             className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
           >
             {machine.machineName} - {machine.urlApiForTsmNetwork}

@@ -225,9 +225,9 @@ export default function AdminPage() {
               Select Default Machine
             </label>
             <MachineSelect
-              defaultValue={selectedDefaultMachine?._id || ""}
+              defaultValue={selectedDefaultMachine?.publicId || ""}
               onChange={(machine) => setSelectedDefaultMachine(machine)}
-              key={selectedDefaultMachine?._id || "empty"}
+              key={selectedDefaultMachine?.publicId || "empty"}
             />
           </div>
 

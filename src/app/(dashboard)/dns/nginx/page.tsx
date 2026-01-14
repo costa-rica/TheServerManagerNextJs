@@ -285,7 +285,7 @@ export default function NginxPage() {
         serverNamesArray: formState.serverNames.filter(
           (name) => name.trim() !== ""
         ),
-        appHostServerMachineId: formState.appHostMachine!._id,
+        appHostServerMachineId: formState.appHostMachine!.publicId,
         portNumber: parseInt(formState.port, 10),
         saveDestination: formState.storeDirectory,
       };

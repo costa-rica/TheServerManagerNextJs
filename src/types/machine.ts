@@ -7,8 +7,7 @@ export interface ServiceConfig {
 }
 
 export interface Machine {
-  _id: string;
-  publicId?: string;
+  publicId: string;
   machineName: string;
   urlApiForTsmNetwork: string;
   localIpAddress: string;

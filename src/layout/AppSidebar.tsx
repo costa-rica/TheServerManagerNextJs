@@ -1,10 +1,11 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { logoutUserFully } from "../store/features/user/userSlice";
+import { hasPageAccess } from "../utils/permissions";
 import {
 	ChevronDownIcon,
 	CloseIcon,
@@ -60,7 +61,9 @@ const AppSidebar: React.FC = () => {
 	const pathname = usePathname();
 	const router = useRouter();
 	const dispatch = useAppDispatch();
-	const { username, token } = useAppSelector((state) => state.user);
+	const { username, token, isAdmin, accessPagesArray = [] } = useAppSelector(
+		(state) => state.user
+	);
 
 	const handleLogout = async () => {
 		// Clear the HTTP-only cookie via API route
@@ -72,6 +75,40 @@ const AppSidebar: React.FC = () => {
 		// Redirect to login
 		router.push("/login");
 	};
+
+	// Filter navigation items based on user permissions
+	const filteredNavItems = useMemo(() => {
+		return navItems
+			.map((item) => {
+				// Always show Logout button
+				if (item.name === "Logout") {
+					return item;
+				}
+
+				// If item has subItems, filter them
+				if (item.subItems) {
+					const filteredSubItems = item.subItems.filter((subItem) =>
+						hasPageAccess(subItem.path, isAdmin, accessPagesArray)
+					);
+
+					// Only show parent if it has accessible children
+					if (filteredSubItems.length > 0) {
+						return { ...item, subItems: filteredSubItems };
+					}
+					return null;
+				}
+
+				// For direct path items, check access
+				if (item.path) {
+					return hasPageAccess(item.path, isAdmin, accessPagesArray)
+						? item
+						: null;
+				}
+
+				return item;
+			})
+			.filter((item): item is NavItem => item !== null);
+	}, [isAdmin, accessPagesArray]);
 
 	const renderMenuItems = (
 		navItems: NavItem[],
@@ -222,7 +259,7 @@ const AppSidebar: React.FC = () => {
 	useEffect(() => {
 		// Check if the current path matches any submenu item
 		let submenuMatched = false;
-		navItems.forEach((nav, index) => {
+		filteredNavItems.forEach((nav, index) => {
 			if (nav.subItems) {
 				nav.subItems.forEach((subItem) => {
 					if (isActive(subItem.path)) {
@@ -240,7 +277,7 @@ const AppSidebar: React.FC = () => {
 		if (!submenuMatched) {
 			setOpenSubmenu(null);
 		}
-	}, [pathname, isActive]);
+	}, [pathname, isActive, filteredNavItems]);
 
 	useEffect(() => {
 		// Set the height of the submenu items when the submenu is opened
@@ -319,7 +356,7 @@ const AppSidebar: React.FC = () => {
 				)}
 
 				<nav className="mb-6">
-					{renderMenuItems(navItems, "main")}
+					{renderMenuItems(filteredNavItems, "main")}
 				</nav>
 			</div>
 			{isExpanded || isMobileOpen ? <SidebarWidget /> : null}
