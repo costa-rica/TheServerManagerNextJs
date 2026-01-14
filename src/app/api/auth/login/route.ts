@@ -63,6 +63,8 @@ async function handleLogin(request: NextRequest) {
 					username: resJson.user?.username || "unknown",
 					email: email,
 					isAdmin: resJson.user?.isAdmin || false,
+					accessServersArray: resJson.user?.accessServersArray || [],
+					accessPagesArray: resJson.user?.accessPagesArray || [],
 				},
 			});
 		} else {

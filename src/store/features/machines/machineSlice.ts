@@ -1,14 +1,7 @@
 // src/store/features/machines/machineSlice.ts
 
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-
-export interface Machine {
-  publicId: string;
-  machineName: string;
-  urlApiForTsmNetwork: string;
-  localIpAddress: string;
-  nginxStoragePathOptions: string[];
-}
+import { Machine } from "@/types/machine";
 
 export interface MachineState {
   machinesArray: Machine[];

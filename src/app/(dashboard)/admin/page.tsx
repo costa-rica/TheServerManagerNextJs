@@ -6,10 +6,15 @@ import {
   clearDefaultMachine,
   connectMachine,
 } from "@/store/features/machines/machineSlice";
-import { Machine } from "@/store/features/machines/machineSlice";
 import MachineSelect from "@/components/form/MachineSelect";
+import { Machine } from "@/types/machine";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
+import { ModalErrorResponse } from "@/components/ui/modal/ModalErrorResponse";
 import { Modal } from "@/components/ui/modal";
+import TableAdminUserPrivileges from "@/components/tables/TableAdminUserPrivileges";
+import { ModalAdminEditServers } from "@/components/ui/modal/ModalAdminEditServers";
+import { ModalAdminEditPages } from "@/components/ui/modal/ModalAdminEditPages";
+import { User } from "@/types/user";
 
 interface DownloadFile {
   fileName: string;
@@ -28,6 +33,7 @@ export default function AdminPage() {
   const defaultMachine = useAppSelector(
     (state) => state.machine.defaultMachine
   );
+  const machinesArray = useAppSelector((state) => state.machine.machinesArray);
 
   const [selectedDefaultMachine, setSelectedDefaultMachine] =
     useState<Machine | null>(null);
@@ -44,6 +50,24 @@ export default function AdminPage() {
     variant: "info",
   });
 
+  // User privileges state
+  const [users, setUsers] = useState<User[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(true);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [editServersModalOpen, setEditServersModalOpen] = useState(false);
+  const [editPagesModalOpen, setEditPagesModalOpen] = useState(false);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorModalData, setErrorModalData] = useState<{
+    code: string;
+    message: string;
+    details?: string;
+    status: number;
+  }>({
+    code: "",
+    message: "",
+    status: 0,
+  });
+
   const showInfoModal = (
     title: string,
     message: string,
@@ -51,6 +75,16 @@ export default function AdminPage() {
   ) => {
     setInfoModalData({ title, message, variant });
     setInfoModalOpen(true);
+  };
+
+  const showErrorModal = (
+    code: string,
+    message: string,
+    status: number,
+    details?: string
+  ) => {
+    setErrorModalData({ code, message, status, details });
+    setErrorModalOpen(true);
   };
 
   // Initialize selected default machine from Redux
@@ -98,6 +132,40 @@ export default function AdminPage() {
   useEffect(() => {
     fetchDownloadFiles();
   }, [fetchDownloadFiles]);
+
+  // Fetch users for admin privileges table
+  const fetchUsers = useCallback(async () => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/admin/users`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(Array.isArray(data.users) ? data.users : []);
+      } else {
+        const errorData = await response.json().catch(() => null);
+        console.error("Failed to fetch users:", errorData);
+        setUsers([]);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setUsers([]);
+    } finally {
+      setLoadingUsers(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleSetDefaultMachine = () => {
     if (!selectedDefaultMachine) {
@@ -177,6 +245,110 @@ export default function AdminPage() {
         "Download Error",
         error instanceof Error ? error.message : "Failed to download file",
         "error"
+      );
+    }
+  };
+
+  // User privileges handlers
+  const handleEditServers = (user: User) => {
+    setSelectedUser(user);
+    setEditServersModalOpen(true);
+  };
+
+  const handleEditPages = (user: User) => {
+    setSelectedUser(user);
+    setEditPagesModalOpen(true);
+  };
+
+  const handleSaveServers = async (
+    userId: string,
+    selectedServerIds: string[]
+  ) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/admin/user/${userId}/access-servers`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ accessServersArray: selectedServerIds }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update local users array
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.publicId === userId
+              ? { ...u, accessServersArray: selectedServerIds }
+              : u
+          )
+        );
+        setEditServersModalOpen(false);
+        showInfoModal("Success", data.message || "Server access updated successfully", "success");
+      } else {
+        showErrorModal(
+          data.code || "UPDATE_FAILED",
+          data.error || data.message || "Failed to update server access",
+          response.status,
+          data.details || ""
+        );
+      }
+    } catch (error) {
+      showErrorModal(
+        "NETWORK_ERROR",
+        error instanceof Error ? error.message : "Failed to update server access",
+        500,
+        "Check your network connection and try again"
+      );
+    }
+  };
+
+  const handleSavePages = async (userId: string, selectedPages: string[]) => {
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_EXTERNAL_API_BASE_URL}/admin/user/${userId}/access-pages`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ accessPagesArray: selectedPages }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Update local users array
+        setUsers((prevUsers) =>
+          prevUsers.map((u) =>
+            u.publicId === userId
+              ? { ...u, accessPagesArray: selectedPages }
+              : u
+          )
+        );
+        setEditPagesModalOpen(false);
+        showInfoModal("Success", data.message || "Page access updated successfully", "success");
+      } else {
+        showErrorModal(
+          data.code || "UPDATE_FAILED",
+          data.error || data.message || "Failed to update page access",
+          response.status,
+          data.details || ""
+        );
+      }
+    } catch (error) {
+      showErrorModal(
+        "NETWORK_ERROR",
+        error instanceof Error ? error.message : "Failed to update page access",
+        500,
+        "Check your network connection and try again"
       );
     }
   };
@@ -304,6 +476,35 @@ export default function AdminPage() {
         )}
       </div>
 
+      {/* User Privileges Section */}
+      <div className="bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg p-6">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+          User Privileges
+        </h2>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+          Manage user permissions for server and page access.
+        </p>
+
+        {loadingUsers ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">Loading users...</p>
+          </div>
+        ) : users.length === 0 ? (
+          <div className="text-center py-8">
+            <p className="text-gray-500 dark:text-gray-400">
+              No users found.
+            </p>
+          </div>
+        ) : (
+          <TableAdminUserPrivileges
+            data={users}
+            machines={machinesArray}
+            onEditServers={handleEditServers}
+            onEditPages={handleEditPages}
+          />
+        )}
+      </div>
+
       {/* Information Modal */}
       <Modal isOpen={infoModalOpen} onClose={() => setInfoModalOpen(false)}>
         <ModalInformationOk
@@ -313,6 +514,43 @@ export default function AdminPage() {
           onClose={() => setInfoModalOpen(false)}
         />
       </Modal>
+
+      {/* Error Modal */}
+      <Modal isOpen={errorModalOpen} onClose={() => setErrorModalOpen(false)}>
+        <ModalErrorResponse
+          error={errorModalData}
+          onClose={() => setErrorModalOpen(false)}
+        />
+      </Modal>
+
+      {/* Edit Servers Modal */}
+      {selectedUser && (
+        <Modal
+          isOpen={editServersModalOpen}
+          onClose={() => setEditServersModalOpen(false)}
+        >
+          <ModalAdminEditServers
+            user={selectedUser}
+            machines={machinesArray}
+            onSave={handleSaveServers}
+            onClose={() => setEditServersModalOpen(false)}
+          />
+        </Modal>
+      )}
+
+      {/* Edit Pages Modal */}
+      {selectedUser && (
+        <Modal
+          isOpen={editPagesModalOpen}
+          onClose={() => setEditPagesModalOpen(false)}
+        >
+          <ModalAdminEditPages
+            user={selectedUser}
+            onSave={handleSavePages}
+            onClose={() => setEditPagesModalOpen(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 }

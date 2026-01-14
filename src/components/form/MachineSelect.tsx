@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { useAppSelector } from "@/store/hooks";
-import { Machine } from "@/store/features/machines/machineSlice";
+import { Machine } from "@/types/machine";
 
 interface MachineSelectProps {
   placeholder?: string;

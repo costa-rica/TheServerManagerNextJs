@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import MachineSelect from "@/components/form/MachineSelect";
-import { Machine } from "@/store/features/machines/machineSlice";
+import { Machine } from "@/types/machine";
 import { Modal } from "@/components/ui/modal";
 import { ModalInformationYesOrNo } from "@/components/ui/modal/ModalInformationYesOrNo";
 import { ModalInformationOk } from "@/components/ui/modal/ModalInformationOk";
