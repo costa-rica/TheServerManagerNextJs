@@ -72,7 +72,7 @@ export default function NginxPage() {
 
   const token = useAppSelector((state) => state.user.token);
   const connectedMachine = useAppSelector(
-    (state) => state.machine.connectedMachine
+    (state) => state.machine.connectedMachine,
   );
 
   // Fetch nginx files on mount and when connected machine changes
@@ -94,7 +94,7 @@ export default function NginxPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (response.ok) {
@@ -156,7 +156,7 @@ export default function NginxPage() {
   const removeServerName = (index: number) => {
     if (formState.serverNames.length > 1) {
       const newServerNames = formState.serverNames.filter(
-        (_, i) => i !== index
+        (_, i) => i !== index,
       );
       const newErrors = serverNameErrors.filter((_, i) => i !== index);
       setFormState((prev) => ({ ...prev, serverNames: newServerNames }));
@@ -198,7 +198,7 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please connect to a machine first",
-        "error"
+        "error",
       );
       return false;
     }
@@ -208,20 +208,20 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please select an App Host Machine",
-        "error"
+        "error",
       );
       return false;
     }
 
     // Validate Server Names
     const validServerNames = formState.serverNames.filter(
-      (name) => name.trim() !== ""
+      (name) => name.trim() !== "",
     );
     if (validServerNames.length === 0) {
       showInfoModal(
         "Validation Error",
         "Please enter at least one server name",
-        "error"
+        "error",
       );
       return false;
     }
@@ -232,7 +232,7 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please fix server name errors before submitting",
-        "error"
+        "error",
       );
       return false;
     }
@@ -242,7 +242,7 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please enter a valid port number (1-65535)",
-        "error"
+        "error",
       );
       return false;
     }
@@ -252,7 +252,7 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please select an app technology",
-        "error"
+        "error",
       );
       return false;
     }
@@ -262,7 +262,7 @@ export default function NginxPage() {
       showInfoModal(
         "Validation Error",
         "Please select a config store directory",
-        "error"
+        "error",
       );
       return false;
     }
@@ -283,9 +283,10 @@ export default function NginxPage() {
       const payload = {
         templateFileName: formState.framework,
         serverNamesArray: formState.serverNames.filter(
-          (name) => name.trim() !== ""
+          (name) => name.trim() !== "",
         ),
-        appHostServerMachineId: formState.appHostMachine!.publicId,
+        // appHostServerMachineId: formState.appHostMachine!.publicId,
+        appHostServerMachinePublicId: formState.appHostMachine!.publicId,
         portNumber: parseInt(formState.port, 10),
         saveDestination: formState.storeDirectory,
       };
@@ -299,7 +300,7 @@ export default function NginxPage() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(payload),
-        }
+        },
       );
 
       let resJson = null;
@@ -332,7 +333,7 @@ export default function NginxPage() {
           `Successfully created nginx configuration file at ${
             resJson?.filePath || "the specified location"
           }`,
-          "success"
+          "success",
         );
       } else {
         const errorMessage =
@@ -347,7 +348,7 @@ export default function NginxPage() {
         error instanceof Error
           ? error.message
           : "Failed to create nginx config file",
-        "error"
+        "error",
       );
     }
   };
@@ -355,7 +356,7 @@ export default function NginxPage() {
   const showInfoModal = (
     title: string,
     message: string,
-    variant: "info" | "success" | "error" | "warning" = "info"
+    variant: "info" | "success" | "error" | "warning" = "info",
   ) => {
     setInfoModalData({ title, message, variant });
     setInfoModalOpen(true);
@@ -378,7 +379,7 @@ export default function NginxPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       let resJson = null;
@@ -398,7 +399,7 @@ export default function NginxPage() {
         showInfoModal(
           "Configuration Deleted",
           `Successfully deleted configuration for ${configToDelete.serverName}`,
-          "success"
+          "success",
         );
       } else {
         const errorMessage =
@@ -415,7 +416,7 @@ export default function NginxPage() {
         error instanceof Error
           ? error.message
           : "Failed to delete configuration",
-        "error"
+        "error",
       );
     }
   };
@@ -425,7 +426,7 @@ export default function NginxPage() {
       showInfoModal(
         "No Machine Connected",
         "Please connect to a machine before clearing the table.",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -444,7 +445,7 @@ export default function NginxPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       let resJson = null;
@@ -467,7 +468,7 @@ export default function NginxPage() {
           } nginx configuration records from the database on ${
             connectedMachine.machineName
           }.`,
-          "success"
+          "success",
         );
       } else {
         const errorMessage =
@@ -480,7 +481,7 @@ export default function NginxPage() {
       showInfoModal(
         "Error",
         error instanceof Error ? error.message : "Failed to clear nginx files",
-        "error"
+        "error",
       );
     }
   };
@@ -490,7 +491,7 @@ export default function NginxPage() {
       serverName: string;
       portNumber: number;
       nullFields: string[];
-    }>
+    }>,
   ) => {
     setNullMachineIdsData(configs);
     setNullMachineIdsModalOpen(true);
@@ -501,7 +502,7 @@ export default function NginxPage() {
       showInfoModal(
         "No Machine Connected",
         "Please connect to a machine before scanning nginx configurations.",
-        "warning"
+        "warning",
       );
       return;
     }
@@ -517,7 +518,7 @@ export default function NginxPage() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       let resJson = null;
@@ -540,7 +541,7 @@ export default function NginxPage() {
         showInfoModal(
           "Nginx Directory Scan Complete",
           message,
-          newCount > 0 ? "success" : "info"
+          newCount > 0 ? "success" : "info",
         );
       } else {
         const errorMessage =
@@ -555,7 +556,7 @@ export default function NginxPage() {
         error instanceof Error
           ? error.message
           : "Failed to scan nginx directory",
-        "error"
+        "error",
       );
     }
   };
@@ -878,7 +879,7 @@ export default function NginxPage() {
                 (config, idx) =>
                   `${idx + 1}. Server: "${config.serverName}", Port: ${
                     config.portNumber
-                  }\n   Null fields: ${config.nullFields.join(", ")}`
+                  }\n   Null fields: ${config.nullFields.join(", ")}`,
               )
               .join("\n\n")
           }
